@@ -1,0 +1,9 @@
+/home/dji/rm_arm_moveit_config/build/CMakeFiles/uninstall.dir
+/home/dji/rm_arm_moveit_config/build/CMakeFiles/rm_arm_moveit_config_uninstall.dir
+/home/dji/rm_arm_moveit_config/build/CMakeFiles/test.dir
+/home/dji/rm_arm_moveit_config/build/CMakeFiles/edit_cache.dir
+/home/dji/rm_arm_moveit_config/build/CMakeFiles/rebuild_cache.dir
+/home/dji/rm_arm_moveit_config/build/CMakeFiles/list_install_components.dir
+/home/dji/rm_arm_moveit_config/build/CMakeFiles/install.dir
+/home/dji/rm_arm_moveit_config/build/CMakeFiles/install/local.dir
+/home/dji/rm_arm_moveit_config/build/CMakeFiles/install/strip.dir
