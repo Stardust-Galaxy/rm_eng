@@ -23,6 +23,18 @@ void RMEngAutoControl::goal_joint_state_callback(const PoseStamped::SharedPtr ms
     geometry_msgs::msg::Pose target_pose;
     target_pose.position = msg->pose.position;
     target_pose.orientation = msg->pose.orientation;
+    if(!is_first_goal &&    std::abs(target_pose.position.x - last_target_pose.position.x) <= 0.05 && 
+                            std::abs(target_pose.position.y - last_target_pose.position.y) <= 0.05 && 
+                            std::abs(target_pose.position.z - last_target_pose.position.z) <= 0.05 && 
+                            std::abs(target_pose.orientation.x - last_target_pose.orientation.x) <= 0.5 && 
+                            std::abs(target_pose.orientation.y - last_target_pose.orientation.y) <= 0.5 && 
+                            std::abs(target_pose.orientation.z - last_target_pose.orientation.z) <= 0.5 && 
+                            std::abs(target_pose.orientation.w - last_target_pose.orientation.w <= 0.2)) {
+        RCLCPP_INFO(this->get_logger(), "The target pose is the same as the last one, no need to move");
+        return;
+    }
+    is_first_goal = false;
+    last_target_pose = target_pose; 
     move_group->setPoseTarget(target_pose);
     auto const [success,plan] = [this] {
         moveit::planning_interface::MoveGroupInterface::Plan plan;
@@ -30,12 +42,13 @@ void RMEngAutoControl::goal_joint_state_callback(const PoseStamped::SharedPtr ms
         return std::make_pair(ok, plan);
     }();
     if(success) {
-        move_group->execute(plan);
+        move_group->asyncExecute(plan);
         RCLCPP_INFO(this->get_logger(), "Plan Success!Executing...");
     }
     else {
         RCLCPP_ERROR(this->get_logger(), "Plan Failed!");
     }
+    loop_rate.sleep();
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(

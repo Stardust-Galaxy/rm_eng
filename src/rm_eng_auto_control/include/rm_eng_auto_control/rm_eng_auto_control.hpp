@@ -15,8 +15,11 @@ public:
     void goal_joint_state_callback(const PoseStamped::SharedPtr msg);
 private:
     void initialize();
+    geometry_msgs::msg::Pose last_target_pose;
+    bool is_first_goal = true;
     rclcpp::Subscription<PoseStamped>::SharedPtr goal_joint_state_subscriber;
     std::shared_ptr<moveit::planning_interface::MoveGroupInterface> move_group;
+    rclcpp::Rate loop_rate = rclcpp::Rate(10);
 };
 
 #endif
