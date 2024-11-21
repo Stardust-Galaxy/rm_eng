@@ -9,11 +9,13 @@ class GoalJointStatePublisher : public rclcpp::Node {
 public:
     using PoseStamped = geometry_msgs::msg::PoseStamped;
     GoalJointStatePublisher(const rclcpp::NodeOptions& options);
-    ~GoalJointStatePublisher();
+    ~GoalJointStatePublisher() override = default;
 private:
-    void t265PoseMsgCallBack(const PoseStamped::SharedPtr msg);
-    rclcpp::Subscription<PoseStamped>::SharedPtr t265PoseSubscriber;
     rclcpp::Publisher<PoseStamped>::SharedPtr goalJointStatePublisher;
+    rclcpp::Subscription<PoseStamped>::SharedPtr visionTargetSubscriber;
+    void visionTargetMsgCallBack(const PoseStamped::SharedPtr msg);
+    PoseStamped msg;
+    rclcpp::TimerBase::SharedPtr timer;
 };
 
 #endif

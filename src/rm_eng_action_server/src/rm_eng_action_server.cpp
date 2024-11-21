@@ -5,13 +5,13 @@ rm_eng_action_server::rm_eng_action_server(const rclcpp::NodeOptions& options) :
     //    control_msgs::FollowJointTrajectoryAction
     //serial_port->init();
     this->action_server_ = rclcpp_action::create_server<FollowJointTrajectory>(
-                this, "/rm_eng_controller/follow_joint_trajectory",
+                this, "/robotic_arm_controller/follow_joint_trajectory",
                 std::bind(&rm_eng_action_server::handle_goal, this, std::placeholders::_1, std::placeholders::_2),
                 std::bind(&rm_eng_action_server::handle_cancel, this, std::placeholders::_1),
                 std::bind(&rm_eng_action_server::handle_accepted, this, std::placeholders::_1));
 
     rclcpp::QoS qos(10);
-    mJointStates = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    mJointStates = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     joint_states_publisher = this->create_publisher<sensor_msgs::msg::JointState>("joint_states",qos);
     std::thread{std::bind(&rm_eng_action_server::publish_joint_states, this)}
     .detach();
@@ -28,7 +28,7 @@ rclcpp_action::GoalResponse rm_eng_action_server::handle_goal(const rclcpp_actio
         for(int i = 0; i < pointSize; i++)
         {
             auto point = goal->trajectory.points.at(i);
-            RCLCPP_INFO(this->get_logger(), "point[%d]: joint[1]:%f,joint[2]:%f,joint[3]:%f,joint[4]:%f,joint[5]:%f,joint[6]:%f,joint[7]:%f", i, point.positions[0],point.positions[1],point.positions[2],point.positions[3],point.positions[4],point.positions[5],point.positions[6]);
+            RCLCPP_INFO(this->get_logger(), "point[%d]: joint[1]:%f,joint[2]:%f,joint[3]:%f,joint[4]:%f,joint[5]:%f,joint[6]:%f", i, point.positions[0],point.positions[1],point.positions[2],point.positions[3],point.positions[4],point.positions[5]);
         }
     }
 
@@ -162,7 +162,7 @@ void rm_eng_action_server::publish_joint_states()
         jointStates.header.stamp.sec = sec;
         jointStates.header.stamp.nanosec = (timeSec - sec) * 1e9;
         
-        jointStates.name = {"joint1", "joint2", "joint3", "joint4", "joint5", "joint6","joint7"};
+        jointStates.name = {"yaw_joint_1", "pitch_joint_1", "pitch_joint_2", "roll_joint_1", "pitch_joint_3", "roll_joint_2"};
         jointStates.position = mJointStates;
 
         joint_states_publisher->publish(jointStates);
