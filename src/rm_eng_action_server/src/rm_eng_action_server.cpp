@@ -140,7 +140,7 @@ std::vector<uint8_t> parseJointStates(joint_states goal_joint_states)
 {
     std::vector<uint8_t> jointStates;
     jointStates.push_back(goal_joint_states.header);
-    for(int i = 0; i < 7; i++)
+    for(int i = 0; i < 6; i++)
     {
         jointStates.push_back(goal_joint_states.positions.at(i));
     }
@@ -162,7 +162,7 @@ void rm_eng_action_server::publish_joint_states()
         jointStates.header.stamp.sec = sec;
         jointStates.header.stamp.nanosec = (timeSec - sec) * 1e9;
         
-        jointStates.name = {"yaw_joint_1", "pitch_joint_1", "pitch_joint_2", "roll_joint_1", "pitch_joint_3", "roll_joint_2"};
+        jointStates.name = {"pitch_joint_1","pitch_joint_2", "pitch_joint_3", "roll_joint_1", "roll_joint_2", "yaw_joint_1"};
         jointStates.position = mJointStates;
 
         joint_states_publisher->publish(jointStates);

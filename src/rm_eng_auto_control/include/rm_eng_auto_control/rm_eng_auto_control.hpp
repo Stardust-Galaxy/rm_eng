@@ -5,6 +5,9 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "moveit/move_group_interface/move_group_interface.h"
 #include "moveit/planning_scene_interface/planning_scene_interface.h"
+#include "moveit/planning_scene_monitor/planning_scene_monitor.h"
+#include "moveit_msgs/msg/attached_collision_object.hpp"
+#include "moveit_msgs/msg/planning_scene.hpp"
 #include "tf2/LinearMath/Quaternion.h"
 class RMEngAutoControl : public rclcpp::Node
 {

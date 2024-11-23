@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(rm_eng_auto_control)
+project(planning_test)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -8,30 +8,26 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rclcpp_components REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(tf2 REQUIRED)
-find_package(moveit_ros_planning_interface REQUIRED)
-find_package(moveit_msgs REQUIRED)
-find_package(ament_cmake_auto REQUIRED)
-ament_auto_find_build_dependencies()
+find_package(rclcpp_components REQUIRED)
 
-ament_auto_add_library(${PROJECT_NAME} SHARED
-  DIRECTORY src
-)
-
-target_include_directories(${PROJECT_NAME} PUBLIC
+add_executable(planning_test src/planning_test.cpp)
+target_include_directories(planning_test PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-
-INSTALL(
-  DIRECTORY launch
-  DESTINATION share/${PROJECT_NAME}
+target_compile_features(planning_test PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+ament_target_dependencies(
+  planning_test
+  "rclcpp"
+  "geometry_msgs"
+  "tf2"
+  "rclcpp_components"
 )
 
-RCLCPP_COMPONENTS_REGISTER_NODE(${PROJECT_NAME}
-  PLUGIN RMEngAutoControl
-  EXECUTABLE rm_eng_auto_control_node
-)
+install(TARGETS planning_test
+  DESTINATION lib/${PROJECT_NAME})
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
@@ -44,4 +40,4 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-ament_auto_package()
+ament_package()
