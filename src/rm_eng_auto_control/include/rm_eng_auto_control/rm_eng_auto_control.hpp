@@ -9,6 +9,10 @@
 #include "moveit_msgs/msg/attached_collision_object.hpp"
 #include "moveit_msgs/msg/planning_scene.hpp"
 #include "tf2/LinearMath/Quaternion.h"
+#include <assimp/scene.h>
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#include <rm_eng_auto_control/slot.hpp>
 class RMEngAutoControl : public rclcpp::Node
 {
 public:
@@ -23,6 +27,8 @@ private:
     rclcpp::Subscription<PoseStamped>::SharedPtr goal_joint_state_subscriber;
     std::shared_ptr<moveit::planning_interface::MoveGroupInterface> move_group;
     rclcpp::Rate loop_rate = rclcpp::Rate(10);
+    shape_msgs::msg::Mesh assimpToShapeMsgMesh(const aiMesh *mesh);
+    shape_msgs::msg::Mesh loadSTLAsShapeMsgMesh(const std::string &file_path);
 };
 
 #endif

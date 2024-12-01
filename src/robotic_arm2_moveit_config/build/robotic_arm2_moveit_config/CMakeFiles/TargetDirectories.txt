@@ -1,9 +1,0 @@
-/home/stardust/Code/robotic_arm2_moveit_config/build/robotic_arm2_moveit_config/CMakeFiles/uninstall.dir
-/home/stardust/Code/robotic_arm2_moveit_config/build/robotic_arm2_moveit_config/CMakeFiles/robotic_arm2_moveit_config_uninstall.dir
-/home/stardust/Code/robotic_arm2_moveit_config/build/robotic_arm2_moveit_config/CMakeFiles/test.dir
-/home/stardust/Code/robotic_arm2_moveit_config/build/robotic_arm2_moveit_config/CMakeFiles/edit_cache.dir
-/home/stardust/Code/robotic_arm2_moveit_config/build/robotic_arm2_moveit_config/CMakeFiles/rebuild_cache.dir
-/home/stardust/Code/robotic_arm2_moveit_config/build/robotic_arm2_moveit_config/CMakeFiles/list_install_components.dir
-/home/stardust/Code/robotic_arm2_moveit_config/build/robotic_arm2_moveit_config/CMakeFiles/install.dir
-/home/stardust/Code/robotic_arm2_moveit_config/build/robotic_arm2_moveit_config/CMakeFiles/install/local.dir
-/home/stardust/Code/robotic_arm2_moveit_config/build/robotic_arm2_moveit_config/CMakeFiles/install/strip.dir
