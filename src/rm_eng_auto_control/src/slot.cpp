@@ -16,7 +16,7 @@ SlotObstacle::generateCollisionObjects(const geometry_msgs::msg::Pose &center_po
     objects.push_back(createComponent(left_wall_, center_pose, 0.0, -0.132, 0.0));
     objects.push_back(createComponent(right_wall_, center_pose, 0.0, 0.132, 0.0));
     objects.push_back(createComponent(ceiling_, center_pose, 0.0, 0.0, 0.132));
-
+    objects.push_back(createComponent(back_wall_, center_pose, -0.106, 0.0, 0.0));
     return objects;
 }
 
@@ -88,5 +88,5 @@ void SlotObstacle::initializeComponents() {
     initializeComponent(right_wall_, "slot_right_wall", {0.288, 0.024, 0.240});
 
     // back wall
-    //initializeComponent(back_wall_, "slot_back_wall", {0.1, 0.01, 0.05});
+    initializeComponent(back_wall_, "slot_back_wall", {0.076, 0.288, 0.240});
 }

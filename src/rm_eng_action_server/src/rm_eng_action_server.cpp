@@ -11,7 +11,7 @@ rm_eng_action_server::rm_eng_action_server(const rclcpp::NodeOptions& options) :
                 std::bind(&rm_eng_action_server::handle_accepted, this, std::placeholders::_1));
 
     rclcpp::QoS qos(10);
-    mJointStates = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    mJointStates = {-1.395, 2.355, -1.57, 0.0, 0.0, 0.0};
     joint_states_publisher = this->create_publisher<sensor_msgs::msg::JointState>("joint_states",qos);
     std::thread{std::bind(&rm_eng_action_server::publish_joint_states, this)}
     .detach();
@@ -149,7 +149,7 @@ std::vector<uint8_t> parseJointStates(joint_states goal_joint_states)
 
 void rm_eng_action_server::publish_joint_states()
 {
-    rclcpp::Rate rate = rclcpp::Rate(15); // 定时进行操作
+    rclcpp::Rate rate = rclcpp::Rate(1); // 定时进行操作
     while (rclcpp::ok()) {
         sensor_msgs::msg::JointState jointStates;
         jointStates.header.frame_id = "";

@@ -94,11 +94,11 @@ RMEngAutoControl::RMEngAutoControl(const rclcpp::NodeOptions& options) : Node("r
 
     SlotObstacle slot("base_link");
     geometry_msgs::msg::Pose slot_pose;
-    slot_pose.position.x = 0.4;
-    slot_pose.position.y = 0.4;
-    slot_pose.position.z = 0.6;
+    slot_pose.position.x = 0.25;
+    slot_pose.position.y = 0.8;
+    slot_pose.position.z = 0.50;
     tf2::Quaternion q;
-    q.setRPY(M_PI/2, 0, -M_PI / 4 * 3);
+    q.setRPY(M_PI/2, 0, - M_PI / 6 * 2);
     slot_pose.orientation.x = q.x();
     slot_pose.orientation.y = q.y();
     slot_pose.orientation.z = q.z();

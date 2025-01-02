@@ -1,0 +1,9 @@
+distortion_coefficients:
+  data: [0.0, 0.0, 0.0, 0.0, 0.0]
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [1.0, 0.0, 0.0,
+         0.0, 1.0, 0.0,
+         0.0, 0.0, 1.0]
+detect_blue_color: true
