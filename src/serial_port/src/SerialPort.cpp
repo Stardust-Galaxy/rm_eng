@@ -130,8 +130,8 @@ void SerialPort::readPayload() {
                             JointStateMsg joint_state_msg;
                             joint_state_msg.header.frame_id = 0x08;
                             joint_state_msg.header.stamp = this->now();
-                            joint_state_msg.name = {"joint1","joint2","joint3","joint4","joint5","joint6","joint7"};
-                            for(int i = 0;i < 7;i += 1) {
+                            joint_state_msg.name = {"pitch_joint_1","pitch_joint_2","pitch_joint_3","roll_joint_1","roll_joint_2","yaw_joint_1"};
+                            for(int i = 0;i < 6;i += 1) {
                                 joint_state_msg.position.push_back(payload[i]);
                             }
                             joint_state_publisher->publish(joint_state_msg);

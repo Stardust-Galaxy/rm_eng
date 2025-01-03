@@ -3,7 +3,7 @@
 #include "tf2/LinearMath/Quaternion.h"
 GoalJointStatePublisher::GoalJointStatePublisher(const rclcpp::NodeOptions& options) : Node("goal_joint_state_publisher",options) {
     rclcpp::QoS qos(30);
-    goalJointStatePublisher = this->create_publisher<PoseStamped>("goal_joint_state",qos);
+    goalJointStatePublisher = this->create_publisher<PoseStamped>("goal_state",qos);
     msg.header.frame_id = "base_link";
     double pitch = 0 * M_PI / 180;
     double yaw = M_PI / 3 * 2;

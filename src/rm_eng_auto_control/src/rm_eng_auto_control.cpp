@@ -8,7 +8,7 @@ RMEngAutoControl::RMEngAutoControl(const rclcpp::NodeOptions& options) : Node("r
         rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true)
     );
     move_group = std::make_shared<moveit::planning_interface::MoveGroupInterface>(node,"robotic_arm");
-    goal_joint_state_subscriber = this->create_subscription<PoseStamped>("goal_joint_state", qos, std::bind(&RMEngAutoControl::goal_joint_state_callback, this, std::placeholders::_1));
+    goal_joint_state_subscriber = this->create_subscription<PoseStamped>("goal_state", qos, std::bind(&RMEngAutoControl::goal_joint_state_callback, this, std::placeholders::_1));
 
     rclcpp::Publisher<moveit_msgs::msg::PlanningScene>::SharedPtr planning_scene_diff_publisher =
         this->create_publisher<moveit_msgs::msg::PlanningScene>("planning_scene", 1);

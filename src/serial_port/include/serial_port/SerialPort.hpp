@@ -43,8 +43,9 @@ private:
     static std::shared_ptr<SerialPort> instance;
     static std::mutex mtx;
     std::array<uint8_t,1> header_buffer;
-    std::array<uint8_t, 7 * sizeof(double)> payload_buffer;
-    std::array<double,7> payload;
+    std::array<uint16_t,6> payload_buffer;
+    std::array<uint16_t,6> payload;
+    rclcpp::Subscription<JointStateMsg>::SharedPtr goal_joint_state_subscription; // publisher not written yet
     rclcpp::Publisher<JointStateMsg>::SharedPtr joint_state_publisher;
 };
 #endif

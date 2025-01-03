@@ -4,6 +4,6 @@
 #include <string>
 struct __attribute__ ((packed)) joint_states {
     uint8_t header;
-    std::array<double, 7> positions;
+    std::array<uint16_t, 6> positions;
 };
 #endif

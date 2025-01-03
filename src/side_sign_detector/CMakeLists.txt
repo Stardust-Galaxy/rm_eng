@@ -14,6 +14,8 @@ find_package(rclcpp_components REQUIRED)
 find_package(ament_cmake_auto REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(tf2 REQUIRED)
 ament_auto_find_build_dependencies()
 
 ament_auto_add_library(${PROJECT_NAME} SHARED
@@ -24,6 +26,11 @@ ament_target_dependencies(
         OpenCV
         cv_bridge
         rclcpp
+        sensor_msgs
+        rclcpp_components
+        yaml-cpp
+        geometry_msgs
+        tf2
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

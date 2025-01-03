@@ -46,7 +46,7 @@ void side_sign_detector::imageCallback(const sensor_msgs::msg::Image::SharedPtr 
     auto img = cv_bridge::toCvCopy(msg, "bgr8")->image;
     processImage(img);
     select_contours();
-
+    solve_angle();
 }
 
 void side_sign_detector::processImage(const cv::Mat &image) {
@@ -83,6 +83,7 @@ void side_sign_detector::select_contours() {
     std::vector<std::vector<cv::Point>> contours;
     std::vector<cv::Vec4i> hierarchy;
     cv::findContours(processed_image, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+    found = false;
     for(size_t i = 0;i < contours.size(); i++) {
         std::vector<cv::Point> approx;
         cv::approxPolyDP(contours[i], approx, cv::arcLength(contours[i], true) * 0.02, true);
@@ -90,11 +91,26 @@ void side_sign_detector::select_contours() {
             continue;
         }
         selected_contours = contours[i];
+        found = true;
         break;
     }
 }
 
 void side_sign_detector::solve_angle() {
+    //camera frame to reference frame
+    cv::Mat camera_to_reference_rVec = cv::Mat::zeros(3, 1, CV_64F);
+    cv::Mat camera_to_reference_tVec = cv::Mat::zeros(3, 1, CV_64F);
+    cv::Mat camera_to_reference_rMat = cv::Mat::eye(3, 3, CV_64F);
+    //Three transformation matrix
+    cv::Mat T_camera_to_reference = cv::Mat::eye(4, 4, CV_64F);
+    cv::Mat T_world_to_reference = cv::Mat::eye(4, 4, CV_64F);
+    cv::Mat T_world_to_camera = cv::Mat::eye(4, 4, CV_64F);
+    camera_to_reference_tVec.at<double>(0,0) = camera_to_reference_x_offset;
+    camera_to_reference_tVec.at<double>(1,0) = camera_to_reference_y_offset;
+    camera_to_reference_tVec.at<double>(2,0) = camera_to_reference_z_offset;
+    cv::Rodrigues(camera_to_reference_rVec, camera_to_reference_rMat);
+    camera_to_reference_rMat.copyTo(T_camera_to_reference(cv::Rect(0, 0, 3, 3)));
+    camera_to_reference_tVec.copyTo(T_camera_to_reference(cv::Rect(3, 0, 1, 3)));
     double max_angle = 0;
     cv::Point max_angle_point;
     std::vector<cv::Point> approx_triangle;
@@ -124,11 +140,25 @@ void side_sign_detector::solve_angle() {
             lower_point = approx_triangle[i];
         }
     }
-    std::vector<cv::Point3f> object_points = {
-            cv::Point3f(-0.05, -0.1, 0),
-            cv::Point3f(0.05, 0, 0),
-            cv::Point3f(-0.05, 0.1, 0)
-    };
+    if(max_angle_point.x < upper_point.x) {
+        direction = LEFT_ORIENTATION;
+    } else {
+        direction = RIGHT_ORIENTATION;
+    }
+    std::vector<cv::Point3f> object_points;
+    if(direction == LEFT_ORIENTATION) {
+        object_points = {
+                cv::Point3f(-0.144, -0.1, 0.1455),
+                cv::Point3f(-0.144, 0, 0.0455),
+                cv::Point3f(-0.144, 0.1, 0.1455)
+        };
+    } else {
+        object_points = {
+                cv::Point3f(0.144, -0.1, 0.1455),
+                cv::Point3f(0.144, 0, 0.0455),
+                cv::Point3f(0.144, 0.1, 0.1455)
+        };
+    }
     std::vector<cv::Point2f> image_points = {
             cv::Point2f(upper_point.x, upper_point.y),
             cv::Point2f(max_angle_point.x, max_angle_point.y),
@@ -136,6 +166,45 @@ void side_sign_detector::solve_angle() {
     };
     cv::Mat tVec, rVec;
     cv::solvePnP(object_points, image_points, CameraMatrix, DistCoeffs, rVec, tVec);
+    cv::Mat rotation_matrix;
+    cv::Rodrigues(rVec, rotation_matrix);
+    rotation_matrix.copyTo(T_world_to_camera(cv::Rect(0, 0, 3, 3)));
+    tVec.copyTo(T_world_to_camera(cv::Rect(3, 0, 1, 3)));
+    T_world_to_reference = T_camera_to_reference.inv() * T_world_to_camera;
+    cv::Mat world_to_reference_rMat = T_world_to_reference(cv::Rect(0, 0, 3, 3));
+    cv::Mat world_to_reference_tVec = T_world_to_reference(cv::Rect(3, 0, 1, 3));
+    cv::Mat mtxR, mtxQ;
+    cv::Vec3d euler_angles = cv::RQDecomp3x3(rotation_matrix, mtxR, mtxQ, cv::noArray(),cv::noArray());
+    cv::Vec3d reference_euler_angles = cv::RQDecomp3x3(world_to_reference_rMat, mtxR, mtxQ, cv::noArray(),cv::noArray());
+    //print euler angle on the screen through imshow
+    cv::putText(source_image, "pitch:" + std::to_string(euler_angles[0]), cv::Point(20, 60), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::putText(source_image, "yaw:" + std::to_string(euler_angles[1]), cv::Point(20, 110), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::putText(source_image, "roll:" + std::to_string(euler_angles[2]), cv::Point(20, 160), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::putText(source_image, "reference_pitch:" + std::to_string(reference_euler_angles[0]), cv::Point(20, 210), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::putText(source_image, "reference_yaw:" + std::to_string(reference_euler_angles[1]), cv::Point(20, 260), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::putText(source_image, "reference_roll:" + std::to_string(reference_euler_angles[2]), cv::Point(20, 310), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::putText(source_image, "reference_x:" + std::to_string(world_to_reference_tVec.at<double>(0, 0)), cv::Point(20, 510), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::putText(source_image, "reference_y:" + std::to_string(world_to_reference_tVec.at<double>(1, 0)), cv::Point(20, 550), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::putText(source_image, "reference_z:" + std::to_string(world_to_reference_tVec.at<double>(2, 0)), cv::Point(20, 610), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::putText(source_image, "x:" + std::to_string(tVec.at<double>(0, 0)), cv::Point(20, 360), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::putText(source_image, "y:" + std::to_string(tVec.at<double>(1, 0)), cv::Point(20, 410), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::putText(source_image, "z:" + std::to_string(tVec.at<double>(2, 0)), cv::Point(20, 460), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::imshow("result", source_image);
+    cv::waitKey(1);
+    geometry_msgs::msg::PoseStamped pose_msg;
+    pose_msg.header.stamp = this->now();
+    pose_msg.header.frame_id = "base_link";
+    pose_msg.pose.position.x = world_to_reference_tVec.at<double>(0, 0);
+    pose_msg.pose.position.y = world_to_reference_tVec.at<double>(1, 0);
+    pose_msg.pose.position.z = world_to_reference_tVec.at<double>(2, 0);
+    tf2::Quaternion q;
+    q.setRPY(reference_euler_angles[2], reference_euler_angles[0], reference_euler_angles[1]);
+    pose_msg.pose.orientation.x = q.x();
+    pose_msg.pose.orientation.y = q.y();
+    pose_msg.pose.orientation.z = q.z();
+    pose_msg.pose.orientation.w = q.w();
+    pose_publisher->publish(pose_msg);
+
 }
 RCLCPP_COMPONENTS_REGISTER_NODE(
         side_sign_detector
