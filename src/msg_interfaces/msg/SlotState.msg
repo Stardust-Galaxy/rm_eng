@@ -1,0 +1,2 @@
+int8 slot_stabled
+geometry_msgs/PoseStamped pose
