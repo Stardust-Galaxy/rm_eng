@@ -1,0 +1,4 @@
+[0mCMake Error: The current CMakeCache.txt directory /home/engineer/code/rm_eng/src/robotic_arm/build/robotic_arm/CMakeCache.txt is different than the directory /home/stardust/robotic_arm/build/robotic_arm where CMakeCache.txt was created. This may result in binaries being created in the wrong place. If you are not sure, reedit the CMakeCache.txt[0m
+[0mCMake Error: The source directory "/home/stardust/robotic_arm" does not exist.
+Specify --help for usage, or press the help button on the CMake GUI.[0m
+gmake: *** [Makefile:226：cmake_check_build_system] 错误 1
