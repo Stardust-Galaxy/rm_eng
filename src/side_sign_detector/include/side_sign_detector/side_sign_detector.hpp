@@ -15,11 +15,11 @@
 #include <rclcpp/publisher.hpp>
 #include <rclcpp/subscription.hpp>
 #include <cv_bridge/cv_bridge.h>
-#include "rclcpp_components/register_node_macro.hpp"
+#include <rclcpp_components/register_node_macro.hpp>
 #include <yaml-cpp/yaml.h>
 #include <filesystem>
 #include <tf2/LinearMath/Quaternion.h>
-
+#include <msg_interfaces/msg/slot_state.hpp>
 
 class side_sign_detector : public rclcpp::Node {
 public:
@@ -30,7 +30,9 @@ public:
     void solve_angle();
 private:
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_subscription;
-    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_publisher;
+    rclcpp::Publisher<msg_interfaces::msg::SlotState>::SharedPtr slot_state_publisher;
+    geometry_msgs::msg::Pose last_frame_pose;
+    int stable_frame_count = 0;
     cv::Mat CameraMatrix;
     cv::Mat DistCoeffs;
     cv::Mat source_image;

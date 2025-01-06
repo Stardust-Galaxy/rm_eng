@@ -34,6 +34,16 @@ side_sign_detector::side_sign_detector(const rclcpp::NodeOptions &options) : Nod
     } catch (const std::exception & e) {
         std::cerr << "Error: " << e.what() << std::endl;
     }
+    slot_state_publisher = this->create_publisher<msg_interfaces::msg::SlotState>("slot_state", rclcpp::QoS(10));
+    {
+        last_frame_pose.position.x = 0.0;
+        last_frame_pose.position.y = 0.0;
+        last_frame_pose.position.z = 0.0;
+        last_frame_pose.orientation.x = 0.0;
+        last_frame_pose.orientation.y = 0.0;
+        last_frame_pose.orientation.z = 0.0;
+        last_frame_pose.orientation.w = 1.0;
+    }
     image_subscription = this->create_subscription<sensor_msgs::msg::Image>(
             "/image_raw",
             rclcpp::SensorDataQoS(),
@@ -84,13 +94,13 @@ void side_sign_detector::select_contours() {
     std::vector<cv::Vec4i> hierarchy;
     cv::findContours(processed_image, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
     found = false;
-    for(size_t i = 0;i < contours.size(); i++) {
+    for(const auto & contour : contours) {
         std::vector<cv::Point> approx;
-        cv::approxPolyDP(contours[i], approx, cv::arcLength(contours[i], true) * 0.02, true);
+        cv::approxPolyDP(contour, approx, cv::arcLength(contour, true) * 0.02, true);
         if(approx.size() <= 5 && approx.size() >= 9 ) {
             continue;
         }
-        selected_contours = contours[i];
+        selected_contours = contour;
         found = true;
         break;
     }
@@ -146,17 +156,18 @@ void side_sign_detector::solve_angle() {
         direction = RIGHT_ORIENTATION;
     }
     std::vector<cv::Point3f> object_points;
+    //use slot center for solvePnP
     if(direction == LEFT_ORIENTATION) {
         object_points = {
-                cv::Point3f(-0.144, -0.1, 0.1455),
-                cv::Point3f(-0.144, 0, 0.0455),
-                cv::Point3f(-0.144, 0.1, 0.1455)
+                cv::Point3f(-0.144, -0.1, 0.0015),
+                cv::Point3f(-0.144, 0, -0.0985),
+                cv::Point3f(-0.144, 0.1, 0.0015)
         };
     } else {
         object_points = {
-                cv::Point3f(0.144, -0.1, 0.1455),
-                cv::Point3f(0.144, 0, 0.0455),
-                cv::Point3f(0.144, 0.1, 0.1455)
+                cv::Point3f(0.144, -0.1, 0.0015),
+                cv::Point3f(0.144, 0, 0.0985),
+                cv::Point3f(0.144, 0.1, 0.0015)
         };
     }
     std::vector<cv::Point2f> image_points = {
@@ -176,6 +187,12 @@ void side_sign_detector::solve_angle() {
     cv::Mat mtxR, mtxQ;
     cv::Vec3d euler_angles = cv::RQDecomp3x3(rotation_matrix, mtxR, mtxQ, cv::noArray(),cv::noArray());
     cv::Vec3d reference_euler_angles = cv::RQDecomp3x3(world_to_reference_rMat, mtxR, mtxQ, cv::noArray(),cv::noArray());
+    double reference_x = world_to_reference_tVec.at<double>(0, 0);
+    double reference_y = world_to_reference_tVec.at<double>(1, 0);
+    double reference_z = world_to_reference_tVec.at<double>(2, 0);
+    double reference_pitch = reference_euler_angles[0];
+    double reference_yaw = reference_euler_angles[1];
+    double reference_roll = reference_euler_angles[2];
     //print euler angle on the screen through imshow
     cv::putText(source_image, "pitch:" + std::to_string(euler_angles[0]), cv::Point(20, 60), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
     cv::putText(source_image, "yaw:" + std::to_string(euler_angles[1]), cv::Point(20, 110), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
@@ -189,8 +206,20 @@ void side_sign_detector::solve_angle() {
     cv::putText(source_image, "x:" + std::to_string(tVec.at<double>(0, 0)), cv::Point(20, 360), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
     cv::putText(source_image, "y:" + std::to_string(tVec.at<double>(1, 0)), cv::Point(20, 410), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
     cv::putText(source_image, "z:" + std::to_string(tVec.at<double>(2, 0)), cv::Point(20, 460), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::putText(source_image, &"direction:" [ (direction == LEFT_ORIENTATION)] ? std::string("LEFT_ORIENTED") : std::string("RIGHT_ORIENTED"), cv::Point(20, 660), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
     cv::imshow("result", source_image);
     cv::waitKey(1);
+    //wait until the slot stops moving
+    if(abs(reference_x - last_frame_pose.position.x ) < 0.1
+       && abs(reference_y - last_frame_pose.position.y) < 0.1
+       && abs(reference_z - last_frame_pose.position.z) < 0.1
+       && abs(reference_pitch - last_frame_pose.orientation.x) < 1
+       && abs(reference_yaw - last_frame_pose.orientation.y) < 1
+       && abs(reference_roll - last_frame_pose.orientation.z) < 1) {
+        stable_frame_count++;
+    } else {
+        stable_frame_count = 0;
+    }
     geometry_msgs::msg::PoseStamped pose_msg;
     pose_msg.header.stamp = this->now();
     pose_msg.header.frame_id = "base_link";
@@ -203,7 +232,10 @@ void side_sign_detector::solve_angle() {
     pose_msg.pose.orientation.y = q.y();
     pose_msg.pose.orientation.z = q.z();
     pose_msg.pose.orientation.w = q.w();
-    pose_publisher->publish(pose_msg);
+    msg_interfaces::msg::SlotState current_slot_state;
+    current_slot_state.pose = pose_msg;
+    current_slot_state.slot_stabled = static_cast<int8_t >(stable_frame_count > 20);
+    slot_state_publisher->publish(current_slot_state);
 
 }
 RCLCPP_COMPONENTS_REGISTER_NODE(
