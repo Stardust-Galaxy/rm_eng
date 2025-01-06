@@ -132,7 +132,8 @@ void SerialPort::readPayload() {
                             joint_state_msg.header.stamp = this->now();
                             joint_state_msg.name = {"pitch_joint_1","pitch_joint_2","pitch_joint_3","roll_joint_1","roll_joint_2","yaw_joint_1"};
                             for(int i = 0;i < 6;i += 1) {
-                                joint_state_msg.position.push_back(payload[i]);
+                                double current_angle = static_cast<double>(payload[i]) / 65536 * 360;
+                                joint_state_msg.position.push_back(current_angle);
                             }
                             joint_state_publisher->publish(joint_state_msg);
                            // 继续读取下一个数据帧
