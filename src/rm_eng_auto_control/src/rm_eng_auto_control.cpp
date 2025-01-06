@@ -9,13 +9,40 @@ RMEngAutoControl::RMEngAutoControl(const rclcpp::NodeOptions& options) : Node("r
     );
     move_group = std::make_shared<moveit::planning_interface::MoveGroupInterface>(node,"robotic_arm");
     goal_joint_state_subscriber = this->create_subscription<PoseStamped>("goal_state", qos, std::bind(&RMEngAutoControl::goal_joint_state_callback, this, std::placeholders::_1));
-
-    rclcpp::Publisher<moveit_msgs::msg::PlanningScene>::SharedPtr planning_scene_diff_publisher =
+    slot_pose_subscriber = this->create_subscription<msg_interfaces::msg::SlotState>("slot_state", qos, [this](const msg_interfaces::msg::SlotState::SharedPtr msg) {
+        if(msg->slot_stabled) {
+            publish_slot(*msg);
+            publish_mine();
+        }
+    });
+    planning_scene_diff_publisher =
         this->create_publisher<moveit_msgs::msg::PlanningScene>("planning_scene", 1);
     while(planning_scene_diff_publisher->get_subscription_count() < 1) {
         RCLCPP_INFO(this->get_logger(), "Waiting for subscriber");
         rclcpp::sleep_for(std::chrono::milliseconds(500));
     }
+
+
+    RCLCPP_INFO(this->get_logger(),"Start to subscribe");
+}
+
+RMEngAutoControl::~RMEngAutoControl() = default;
+
+void RMEngAutoControl::publish_slot(const msg_interfaces::msg::SlotState& slot_state) {
+    moveit_msgs::msg::PlanningScene planning_scene;
+    SlotObstacle slot("base_link");
+    geometry_msgs::msg::Pose slot_pose;
+    slot_pose.position = slot_state.pose.pose.position;
+    slot_pose.orientation = slot_state.pose.pose.orientation;
+    RCLCPP_INFO(this->get_logger(), "Generating Slot Collision Objects");
+    std::vector<moveit_msgs::msg::CollisionObject> slot_objects = slot.generateCollisionObjects(slot_pose);
+    RCLCPP_INFO(this->get_logger(), "Publishing Slot into the world");
+    planning_scene.world.collision_objects.insert(planning_scene.world.collision_objects.end(), slot_objects.begin(), slot_objects.end());
+    planning_scene.is_diff = true;
+    planning_scene_diff_publisher->publish(planning_scene);
+}
+
+void RMEngAutoControl::publish_mine() {
     /*
      * Gold Mine Definition
      */
@@ -59,63 +86,6 @@ RMEngAutoControl::RMEngAutoControl(const rclcpp::NodeOptions& options) : Node("r
     planning_scene.robot_state.attached_collision_objects.push_back(attached_object);
     planning_scene.robot_state.is_diff = true;
     planning_scene_diff_publisher->publish(planning_scene);
-    /*
-     * Exchange Station Definition
-     */
-    /*
-    moveit_msgs::msg::CollisionObject exchange_station;
-    exchange_station.id = "exchange_station";
-    exchange_station.header.frame_id = "base_link";
-    exchange_station.operation = exchange_station.ADD;
-    // define the pose of the Exchange Station
-    geometry_msgs::msg::Pose exchange_station_pose;
-    tf2::Quaternion q;
-    q.setRPY(M_PI/2, 0,  - M_PI / 4 * 3);
-    exchange_station_pose.orientation.x = q.x();
-    exchange_station_pose.orientation.y = q.y();
-    exchange_station_pose.orientation.z = q.z();
-    exchange_station_pose.orientation.w = q.w();
-    //exchange_station_pose.orientation.w = 1.0;
-    exchange_station_pose.position.x = 0.8;
-    exchange_station_pose.position.y = 0.6;
-    exchange_station_pose.position.z = 0.6;
-    // define the dimensions of the Exchange Station
-    shape_msgs::msg::Mesh mesh = loadSTLAsShapeMsgMesh("/home/stardust/Code/exchange_station/meshes/link6.STL");
-    exchange_station.meshes.push_back(mesh);
-    exchange_station.mesh_poses.push_back(exchange_station_pose);
-    RCLCPP_INFO(this->get_logger(), "Publishing Exchange Station into the world");
-    planning_scene.world.collision_objects.push_back(exchange_station);
-    planning_scene.is_diff = true;
-    planning_scene_diff_publisher->publish(planning_scene);
-    */
-    /*
-     * Slot Definition
-     */
-
-    SlotObstacle slot("base_link");
-    geometry_msgs::msg::Pose slot_pose;
-    slot_pose.position.x = 0.25;
-    slot_pose.position.y = 0.8;
-    slot_pose.position.z = 0.50;
-    tf2::Quaternion q;
-    q.setRPY(M_PI/2, 0, - M_PI / 6 * 2);
-    slot_pose.orientation.x = q.x();
-    slot_pose.orientation.y = q.y();
-    slot_pose.orientation.z = q.z();
-    slot_pose.orientation.w = q.w();
-    RCLCPP_INFO(this->get_logger(), "Generating Slot Collision Objects");
-    std::vector<moveit_msgs::msg::CollisionObject> slot_objects = slot.generateCollisionObjects(slot_pose);
-    RCLCPP_INFO(this->get_logger(), "Publishing Slot into the world");
-    planning_scene.world.collision_objects.insert(planning_scene.world.collision_objects.end(), slot_objects.begin(), slot_objects.end());
-    planning_scene.is_diff = true;
-    planning_scene_diff_publisher->publish(planning_scene);
-    RCLCPP_INFO(this->get_logger(),"Start to subscribe");
-}
-
-RMEngAutoControl::~RMEngAutoControl() {}
-
-void RMEngAutoControl::initialize() {
-    move_group = std::make_shared<moveit::planning_interface::MoveGroupInterface>(shared_from_this(), "robotic_arm");
 }
 
 void RMEngAutoControl::goal_joint_state_callback(const PoseStamped::SharedPtr msg) {
@@ -177,6 +147,8 @@ shape_msgs::msg::Mesh RMEngAutoControl::loadSTLAsShapeMsgMesh(const std::string 
 
     return assimpToShapeMsgMesh(scene->mMeshes[0]);
 }
+
+
 
 
 RCLCPP_COMPONENTS_REGISTER_NODE(
