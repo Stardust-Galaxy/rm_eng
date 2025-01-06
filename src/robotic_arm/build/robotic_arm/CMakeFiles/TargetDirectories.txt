@@ -1,0 +1,9 @@
+/home/stardust/robotic_arm/build/robotic_arm/CMakeFiles/uninstall.dir
+/home/stardust/robotic_arm/build/robotic_arm/CMakeFiles/robotic_arm_uninstall.dir
+/home/stardust/robotic_arm/build/robotic_arm/CMakeFiles/test.dir
+/home/stardust/robotic_arm/build/robotic_arm/CMakeFiles/edit_cache.dir
+/home/stardust/robotic_arm/build/robotic_arm/CMakeFiles/rebuild_cache.dir
+/home/stardust/robotic_arm/build/robotic_arm/CMakeFiles/list_install_components.dir
+/home/stardust/robotic_arm/build/robotic_arm/CMakeFiles/install.dir
+/home/stardust/robotic_arm/build/robotic_arm/CMakeFiles/install/local.dir
+/home/stardust/robotic_arm/build/robotic_arm/CMakeFiles/install/strip.dir

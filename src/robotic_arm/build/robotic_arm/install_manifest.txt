@@ -1,0 +1,15 @@
+/home/stardust/robotic_arm/install/robotic_arm/share/ament_index/resource_index/package_run_dependencies/robotic_arm
+/home/stardust/robotic_arm/install/robotic_arm/share/ament_index/resource_index/parent_prefix_path/robotic_arm
+/home/stardust/robotic_arm/install/robotic_arm/share/robotic_arm/environment/ament_prefix_path.sh
+/home/stardust/robotic_arm/install/robotic_arm/share/robotic_arm/environment/ament_prefix_path.dsv
+/home/stardust/robotic_arm/install/robotic_arm/share/robotic_arm/environment/path.sh
+/home/stardust/robotic_arm/install/robotic_arm/share/robotic_arm/environment/path.dsv
+/home/stardust/robotic_arm/install/robotic_arm/share/robotic_arm/local_setup.bash
+/home/stardust/robotic_arm/install/robotic_arm/share/robotic_arm/local_setup.sh
+/home/stardust/robotic_arm/install/robotic_arm/share/robotic_arm/local_setup.zsh
+/home/stardust/robotic_arm/install/robotic_arm/share/robotic_arm/local_setup.dsv
+/home/stardust/robotic_arm/install/robotic_arm/share/robotic_arm/package.dsv
+/home/stardust/robotic_arm/install/robotic_arm/share/ament_index/resource_index/packages/robotic_arm
+/home/stardust/robotic_arm/install/robotic_arm/share/robotic_arm/cmake/robotic_armConfig.cmake
+/home/stardust/robotic_arm/install/robotic_arm/share/robotic_arm/cmake/robotic_armConfig-version.cmake
+/home/stardust/robotic_arm/install/robotic_arm/share/robotic_arm/package.xml
