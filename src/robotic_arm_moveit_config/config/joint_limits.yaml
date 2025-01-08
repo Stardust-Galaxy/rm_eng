@@ -10,36 +10,36 @@ default_acceleration_scaling_factor: 0.1
 joint_limits:
   pitch_joint_1:
     has_velocity_limits: false
-    max_velocity: 0
+    max_velocity: 0.0
     has_acceleration_limits: false
-    max_acceleration: 0
+    max_acceleration: 0.0
   pitch_joint_2:
     has_velocity_limits: false
-    max_velocity: 0
+    max_velocity: 0.0
     has_acceleration_limits: false
-    max_acceleration: 0
+    max_acceleration: 0.0
   pitch_joint_3:
     has_velocity_limits: false
-    max_velocity: 0
+    max_velocity: 0.0
     has_acceleration_limits: false
-    max_acceleration: 0
+    max_acceleration: 0.0
   roll_joint_1:
     has_velocity_limits: false
-    max_velocity: 0
+    max_velocity: 0.0
     has_acceleration_limits: false
-    max_acceleration: 0
+    max_acceleration: 0.0
   roll_joint_2:
     has_velocity_limits: false
-    max_velocity: 0
+    max_velocity: 0.0
     has_acceleration_limits: false
-    max_acceleration: 0
+    max_acceleration: 0.0
   shift_joint:
     has_velocity_limits: false
-    max_velocity: 0
+    max_velocity: 0.0
     has_acceleration_limits: false
-    max_acceleration: 0
+    max_acceleration: 0.0
   yaw_joint_1:
     has_velocity_limits: false
-    max_velocity: 0
+    max_velocity: 0.0
     has_acceleration_limits: false
-    max_acceleration: 0
+    max_acceleration: 0.0
