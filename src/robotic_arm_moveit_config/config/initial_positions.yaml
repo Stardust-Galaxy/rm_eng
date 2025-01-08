@@ -6,4 +6,5 @@ initial_positions:
   pitch_joint_3: 0
   roll_joint_1: 0
   roll_joint_2: 0
+  shift_joint: 0
   yaw_joint_1: 0

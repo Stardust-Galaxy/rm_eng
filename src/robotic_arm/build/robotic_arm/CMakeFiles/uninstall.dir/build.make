@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/engineer/code/rm_eng/src/robotic_arm
+CMAKE_SOURCE_DIR = /home/engineer/code/robotic_arm
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/engineer/code/rm_eng/src/robotic_arm/build/robotic_arm
+CMAKE_BINARY_DIR = /home/engineer/code/robotic_arm/build/robotic_arm
 
 # Utility rule file for uninstall.
 
@@ -78,6 +78,6 @@ CMakeFiles/uninstall.dir/clean:
 .PHONY : CMakeFiles/uninstall.dir/clean
 
 CMakeFiles/uninstall.dir/depend:
-	cd /home/engineer/code/rm_eng/src/robotic_arm/build/robotic_arm && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/engineer/code/rm_eng/src/robotic_arm /home/engineer/code/rm_eng/src/robotic_arm /home/engineer/code/rm_eng/src/robotic_arm/build/robotic_arm /home/engineer/code/rm_eng/src/robotic_arm/build/robotic_arm /home/engineer/code/rm_eng/src/robotic_arm/build/robotic_arm/CMakeFiles/uninstall.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/engineer/code/robotic_arm/build/robotic_arm && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/engineer/code/robotic_arm /home/engineer/code/robotic_arm /home/engineer/code/robotic_arm/build/robotic_arm /home/engineer/code/robotic_arm/build/robotic_arm /home/engineer/code/robotic_arm/build/robotic_arm/CMakeFiles/uninstall.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/uninstall.dir/depend
 

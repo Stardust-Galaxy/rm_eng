@@ -7,17 +7,13 @@ controller_manager:
       type: joint_trajectory_controller/JointTrajectoryController
 
 
-    sucker_controller:
-      type: position_controllers/GripperActionController
-
-
-
-    #joint_state_broadcaster:
-    #  type: rm_eng_action_server/rm_eng_action_server_node
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
 
 robotic_arm_controller:
   ros__parameters:
     joints:
+      - shift_joint
       - yaw_joint_1
       - pitch_joint_1
       - pitch_joint_2
@@ -29,6 +25,3 @@ robotic_arm_controller:
     state_interfaces:
       - position
       - velocity
-sucker_controller:
-  ros__parameters:
-    joint: roll_joint_2
