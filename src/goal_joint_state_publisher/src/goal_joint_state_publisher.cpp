@@ -5,9 +5,9 @@ GoalJointStatePublisher::GoalJointStatePublisher(const rclcpp::NodeOptions& opti
     rclcpp::QoS qos(30);
     goalJointStatePublisher = this->create_publisher<PoseStamped>("goal_state",qos);
     msg.header.frame_id = "base_link";
-    double pitch = 0 * M_PI / 180;
-    double yaw = M_PI / 3 * 2;
-    double roll = 0 * M_PI / 180;
+    double pitch = 0 * M_PI;
+    double yaw = M_PI;
+    double roll = 0 * M_PI;
     msg.pose.position.x = 0.25 - (0.33 + 0.044) * cos(yaw);
     msg.pose.position.x = 0.3 ;
     msg.pose.position.y = 0.8 - (0.33 + 0.044) * sin(yaw);

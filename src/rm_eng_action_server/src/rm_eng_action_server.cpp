@@ -11,7 +11,7 @@ rm_eng_action_server::rm_eng_action_server(const rclcpp::NodeOptions& options) :
                 std::bind(&rm_eng_action_server::handle_accepted, this, std::placeholders::_1));
 
     rclcpp::QoS qos(10);
-    mJointStates = {-1.395, 2.355, -1.57, 0.0, 0.0, 0.0};
+    mJointStates = {-1.395, -2.355, 1.57, 0.0, 0.0, 0.0, 0.0};
     joint_states_publisher = this->create_publisher<sensor_msgs::msg::JointState>("joint_states",qos);
     std::thread{std::bind(&rm_eng_action_server::publish_joint_states, this)}
     .detach();
@@ -162,7 +162,7 @@ void rm_eng_action_server::publish_joint_states()
         jointStates.header.stamp.sec = sec;
         jointStates.header.stamp.nanosec = (timeSec - sec) * 1e9;
         
-        jointStates.name = {"pitch_joint_1","pitch_joint_2", "pitch_joint_3", "roll_joint_1", "roll_joint_2", "yaw_joint_1"};
+        jointStates.name = {"pitch_joint_1","pitch_joint_2", "pitch_joint_3", "roll_joint_1", "roll_joint_2", "shift_joint", "yaw_joint_1"};
         jointStates.position = mJointStates;
 
         joint_states_publisher->publish(jointStates);
