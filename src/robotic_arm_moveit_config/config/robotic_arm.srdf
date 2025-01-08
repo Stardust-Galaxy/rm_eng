@@ -13,8 +13,8 @@
         <joint name="shift_joint"/>
         <joint name="yaw_joint_1"/>
         <joint name="pitch_joint_1"/>
-        <joint name="roll_joint_1"/>
         <joint name="pitch_joint_2"/>
+        <joint name="roll_joint_1"/>
         <joint name="pitch_joint_3"/>
         <joint name="roll_joint_2"/>
     </group>
