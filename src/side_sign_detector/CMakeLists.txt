@@ -1,10 +1,14 @@
 cmake_minimum_required(VERSION 3.8)
 project(side_sign_detector)
 
+cmake_policy(SET CMP0057 NEW)
+
+set(CMAKE_CXX_STANDARD 11)
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
-
+#set(YAML_CPP_DIR "/usr/local/lib/cmake/yaml-cpp")
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(OpenCV REQUIRED)
@@ -14,13 +18,18 @@ find_package(rclcpp_components REQUIRED)
 find_package(ament_cmake_auto REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(yaml-cpp REQUIRED)
+if(yaml-cpp_FOUND)
+  message(STATUS "Found yaml-cpp: ${yaml-cpp_VERSION}")
+  include_directories(${yaml-cpp_INCLUDE_DIRS})
+endif()
 find_package(geometry_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(msg_interfaces REQUIRED)
 ament_auto_find_build_dependencies()
 
 ament_auto_add_library(${PROJECT_NAME} SHARED
-  DIRECTORY src)
+  DIRECTORY src
+)
 
 ament_target_dependencies(
         ${PROJECT_NAME}
@@ -29,7 +38,6 @@ ament_target_dependencies(
         rclcpp
         sensor_msgs
         rclcpp_components
-        yaml-cpp
         geometry_msgs
         tf2
 )
@@ -39,6 +47,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 target_link_libraries(${PROJECT_NAME}
         ${OpenCV_LIBS}
+)
+target_link_libraries(${PROJECT_NAME}
+        ${yaml-cpp_LIBRARIES}
 )
 target_include_directories(side_sign_detector PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -65,4 +76,4 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-ament_package()
+ament_auto_package()

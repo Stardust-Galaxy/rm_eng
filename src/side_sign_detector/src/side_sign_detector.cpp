@@ -207,6 +207,7 @@ void side_sign_detector::solve_angle() {
     cv::putText(source_image, "y:" + std::to_string(tVec.at<double>(1, 0)), cv::Point(20, 410), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
     cv::putText(source_image, "z:" + std::to_string(tVec.at<double>(2, 0)), cv::Point(20, 460), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
     cv::putText(source_image, &"direction:" [ (direction == LEFT_ORIENTATION)] ? std::string("LEFT_ORIENTED") : std::string("RIGHT_ORIENTED"), cv::Point(20, 660), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::putText(source_image, &"stabilization_state:" [ (stable_frame_count > 20)] ? std::string("STABLE") : std::string("UNSTABLE"), cv::Point(20, 710), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
     cv::imshow("result", source_image);
     cv::waitKey(1);
     //wait until the slot stops moving
