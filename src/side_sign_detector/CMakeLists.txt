@@ -49,7 +49,7 @@ target_link_libraries(${PROJECT_NAME}
         ${OpenCV_LIBS}
 )
 target_link_libraries(${PROJECT_NAME}
-        ${yaml-cpp_LIBRARIES}
+        yaml-cpp
 )
 target_include_directories(side_sign_detector PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

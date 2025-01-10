@@ -9,7 +9,7 @@ side_sign_detector::side_sign_detector(const rclcpp::NodeOptions &options) : Nod
     DistCoeffs = cv::Mat::zeros(5, 1, CV_64F);
     try {
         std::string current_path = std::filesystem::current_path();
-        std::string yaml_file_path = current_path + "/src/side_sign_detector/config/camera_info.yaml";
+        std::string yaml_file_path = current_path + "/src/side_sign_detector/config/camera.yaml";
         YAML::Node config = YAML::LoadFile(yaml_file_path);
 
         const YAML::Node& camera_matrix_node = config["camera_matrix"]["data"];
@@ -19,14 +19,14 @@ side_sign_detector::side_sign_detector(const rclcpp::NodeOptions &options) : Nod
             index++;
         }
 
-        const YAML::Node& dist_coeffs_node = config["distortion_coefficients"]["data"];
+        const YAML::Node& dist_coeffs_node = config["distortion_coefficients"];
         index = 0;
         for(const auto& value : dist_coeffs_node) {
             DistCoeffs.at<double>(index) = value.as<double>();
             index++;
         }
 
-        detect_color = config["detect_red_color"].as<bool>();
+        detect_color = config["detect_blue_color"].as<bool>();
     } catch (const YAML::ParserException& e) {
         std::cerr << "YAML parsing Error: " << e.what() << std::endl;
     } catch (const std::filesystem::filesystem_error& e) {
