@@ -25,13 +25,13 @@ private:
     void handle_accepted(const std::shared_ptr<GoalHandleFJT> goal_handle);
     void execute(const std::shared_ptr<GoalHandleFJT> goal_handle);
     void publish_joint_states();
-    std::vector<uint8_t> parseJointStates(joint_states goal_joint_states);
+    std::vector<int16_t> parseJointStates(joint_states_for_send goal_joint_states);
     std::shared_ptr<SerialPort> serial_port;
     // 假装真正的关节状态
     std::vector<double> mJointStates;
     rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_states_subscriber;
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_states_publisher;
-    joint_states goalJointStates;
+    joint_states_for_send goalJointStates;
     uint8_t goalJointStateHeader = 0xA8;
 };
 

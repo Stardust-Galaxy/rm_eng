@@ -12,12 +12,12 @@ rm_eng_action_server::rm_eng_action_server(const rclcpp::NodeOptions& options) :
 
     rclcpp::QoS qos(10);
     mJointStates = {0.0, 0.0, -1.395, -2.355, 0.0, 1.57, 0.0};
-    //joint_states_subscriber = this->create_subscription<sensor_msgs::msg::JointState>("joint_states", qos, [this](const sensor_msgs::msg::JointState::SharedPtr msg){
+    //joint_states_subscriber = this->create_subscription<sensor_msgs::msg::JointState>("joint_states_for_send", qos, [this](const sensor_msgs::msg::JointState::SharedPtr msg){
     //    mJointStates = msg->position;
     //});
-    joint_states_publisher = this->create_publisher<sensor_msgs::msg::JointState>("joint_states",qos);
-    std::thread{std::bind(&rm_eng_action_server::publish_joint_states, this)}
-    .detach();
+    //joint_states_publisher = this->create_publisher<sensor_msgs::msg::JointState>("joint_states_for_send",qos);
+    //std::thread{std::bind(&rm_eng_action_server::publish_joint_states, this)}
+    //.detach();
 }
 
 rclcpp_action::GoalResponse rm_eng_action_server::handle_goal(const rclcpp_action::GoalUUID &uuid, std::shared_ptr<const FollowJointTrajectory::Goal> goal)
@@ -122,11 +122,18 @@ void rm_eng_action_server::execute(const std::shared_ptr<GoalHandleFJT> goal_han
     auto trjPointsSize = goal->trajectory.points.size();
     auto finalPoint = goal->trajectory.points.at(trjPointsSize - 1);
     goalJointStates.header = goalJointStateHeader;
-    for(int i = 0; i < static_cast<int>(finalPoint.positions.size()); i++)
+    goalJointStates.mode = 0;
+    goalJointStates.yaw_joint_1 = static_cast<int16_t>(finalPoint.positions[0] / M_PI / 2 * 65536);
+    goalJointStates.pitch_joint_1 = static_cast<int16_t>(finalPoint.positions[1] / M_PI / 2 * 65536);
+    goalJointStates.pitch_joint_2 = static_cast<int16_t>(finalPoint.positions[2] / M_PI / 2 * 65536);
+    goalJointStates.roll_joint_1 = static_cast<int16_t>(finalPoint.positions[3] / M_PI / 2 * 65536);
+    goalJointStates.pitch_joint_3 = static_cast<int16_t>(finalPoint.positions[4] / M_PI / 2 * 8192);
+    goalJointStates.roll_joint_2 = static_cast<int16_t>(finalPoint.positions[5] / M_PI / 2 * 8192);
+    std::vector<int16_t> readyToSendJS = parseJointStates(goalJointStates);
+    for(auto& point : goal->trajectory.joint_names)
     {
-        goalJointStates.positions.at(i) = finalPoint.positions.at(i);
+        RCLCPP_INFO(this->get_logger(), "joint name: %s", point.c_str());
     }
-    std::vector<uint8_t> readyToSendJS = parseJointStates(goalJointStates);
     serial_port->write(readyToSendJS);
     result->error_code = 0;
     result->error_string = "";
@@ -139,14 +146,17 @@ void rm_eng_action_server::handle_accepted(const std::shared_ptr<GoalHandleFJT> 
     std::thread{std::bind(&rm_eng_action_server::execute_move, this, _1), goal_handle}.detach();
 }
 
-std::vector<uint8_t> parseJointStates(joint_states goal_joint_states)
+std::vector<int16_t> parseJointStates(joint_states_for_send goal_joint_states)
 {
-    std::vector<uint8_t> jointStates;
+    std::vector<int16_t> jointStates;
     jointStates.push_back(goal_joint_states.header);
-    for(int i = 0; i < 7; i++)
-    {
-        jointStates.push_back(goal_joint_states.positions.at(i));
-    }
+    jointStates.push_back(goal_joint_states.mode);
+    jointStates.push_back(goal_joint_states.yaw_joint_1);
+    jointStates.push_back(goal_joint_states.pitch_joint_1);
+    jointStates.push_back(goal_joint_states.pitch_joint_2);
+    jointStates.push_back(goal_joint_states.roll_joint_1);
+    jointStates.push_back(goal_joint_states.pitch_joint_3);
+    jointStates.push_back(goal_joint_states.roll_joint_2);
     return jointStates;
 }
 
