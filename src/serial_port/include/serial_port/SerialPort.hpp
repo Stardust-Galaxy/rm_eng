@@ -13,19 +13,19 @@
 #include <array>
 #include <mutex>
 
-const int packet_size = sizeof(joint_states);
+const int packet_size = sizeof(joint_states_for_send);
 
 class SerialPort : public rclcpp::Node {
 public:
     using JointStateMsg = sensor_msgs::msg::JointState;
-        SerialPort(const rclcpp::NodeOptions& options);
+    SerialPort(const rclcpp::NodeOptions& options);
     SerialPort(const rclcpp::NodeOptions& options, std::string& name);
     ~SerialPort();
     static std::shared_ptr<SerialPort> getInstance();
     bool init();
     void read();
-    void write(std::vector<uint8_t> data);
-    void setBaudRate(uint badu_rate);
+    void write(std::vector<int16_t> data);
+    void setBaudRate(uint baud_rate);
     void setPortName(const std::string& name);
     void close();
     boost::asio::streambuf::const_buffers_type getReadBuf();

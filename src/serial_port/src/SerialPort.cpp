@@ -67,7 +67,7 @@ void SerialPort::close() {
 //     }
 //     //RCLCPP_INFO(this->get_logger(),"Read %ld bytes", bytes_transferred);
 //     std::vector<uint8_t> data(buffer.begin(),buffer.end());
-//     joint_states* js = reinterpret_cast<joint_states*>(data.data());
+//     joint_states_for_send* js = reinterpret_cast<joint_states_for_send*>(data.data());
 //     JointStateMsg joint_state_msg;
 //     joint_state_msg.header.frame_id = js->header;
 //     joint_state_msg.header.stamp = this->now();
@@ -89,7 +89,7 @@ void SerialPort::write_handler(boost::system::error_code error_code,size_t bytes
 void SerialPort::read() {
     readHeader();
 }
-void SerialPort::write(std::vector<uint8_t> data) {
+void SerialPort::write(std::vector<int16_t> data) {
     boost::asio::async_write(*serial_port,boost::asio::buffer(data),boost::asio::transfer_exactly(packet_size),boost::bind(&SerialPort::write_handler,this,boost::asio::placeholders::error,boost::asio::placeholders::bytes_transferred));
 }
 
@@ -131,12 +131,12 @@ void SerialPort::readPayload() {
                             joint_state_msg.position.resize(7);
                             joint_state_msg.position[0] = static_cast<double>(received_joint_states.yaw_joint_1) / 65536 * 2 * M_PI ;
                             joint_state_msg.position[1] = static_cast<double>(received_joint_states.pitch_joint_1) / 65536 * 2 * M_PI;
-                            joint_state_msg.position[2] = static_cast<double>(received_joint_states.pitch_joint_2) / 65536 * 2 * M_PI;
+                            joint_state_msg.position[2] = - static_cast<double>(received_joint_states.pitch_joint_2) / 65536 * 2 * M_PI;
                             joint_state_msg.position[3] = static_cast<double>(received_joint_states.roll_joint_1) / 65536 * 2 * M_PI;
                             joint_state_msg.position[4] = static_cast<double>(received_joint_states.pitch_joint_3) / 8192 * 2 * M_PI;
                             joint_state_msg.position[5] = static_cast<double>(received_joint_states.roll_joint_2) / 8192 * 2 * M_PI;
                             joint_state_msg.position[6] = 0.0;
-
+                            RCLCPP_INFO(this->get_logger(), "yaw_joint_1: %f, pitch_joint_1: %f, pitch_joint_2: %f, roll_joint_1: %f, pitch_joint_3: %f, roll_joint_2: %f", joint_state_msg.position[0], joint_state_msg.position[1], joint_state_msg.position[2], joint_state_msg.position[3], joint_state_msg.position[4], joint_state_msg.position[5]);
                             joint_state_publisher->publish(joint_state_msg);
                            // 继续读取下一个数据帧
                             readHeader();
