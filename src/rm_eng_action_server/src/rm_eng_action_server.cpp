@@ -11,7 +11,10 @@ rm_eng_action_server::rm_eng_action_server(const rclcpp::NodeOptions& options) :
                 std::bind(&rm_eng_action_server::handle_accepted, this, std::placeholders::_1));
 
     rclcpp::QoS qos(10);
-    mJointStates = {-1.395, -2.355, 1.57, 0.0, 0.0, 0.0, 0.0};
+    mJointStates = {0.0, 0.0, -1.395, -2.355, 0.0, 1.57, 0.0};
+    //joint_states_subscriber = this->create_subscription<sensor_msgs::msg::JointState>("joint_states", qos, [this](const sensor_msgs::msg::JointState::SharedPtr msg){
+    //    mJointStates = msg->position;
+    //});
     joint_states_publisher = this->create_publisher<sensor_msgs::msg::JointState>("joint_states",qos);
     std::thread{std::bind(&rm_eng_action_server::publish_joint_states, this)}
     .detach();
@@ -28,7 +31,7 @@ rclcpp_action::GoalResponse rm_eng_action_server::handle_goal(const rclcpp_actio
         for(int i = 0; i < pointSize; i++)
         {
             auto point = goal->trajectory.points.at(i);
-            RCLCPP_INFO(this->get_logger(), "point[%d]: joint[1]:%f,joint[2]:%f,joint[3]:%f,joint[4]:%f,joint[5]:%f,joint[6]:%f", i, point.positions[0],point.positions[1],point.positions[2],point.positions[3],point.positions[4],point.positions[5]);
+            RCLCPP_INFO(this->get_logger(), "point[%d]: joint[1]:%f,joint[2]:%f,joint[3]:%f,joint[4]:%f,joint[5]:%f,joint[6]:%f, joint[7]:%f", i, point.positions[0],point.positions[1],point.positions[2],point.positions[3],point.positions[4],point.positions[5]);
         }
     }
 
@@ -140,7 +143,7 @@ std::vector<uint8_t> parseJointStates(joint_states goal_joint_states)
 {
     std::vector<uint8_t> jointStates;
     jointStates.push_back(goal_joint_states.header);
-    for(int i = 0; i < 6; i++)
+    for(int i = 0; i < 7; i++)
     {
         jointStates.push_back(goal_joint_states.positions.at(i));
     }
@@ -162,13 +165,12 @@ void rm_eng_action_server::publish_joint_states()
         jointStates.header.stamp.sec = sec;
         jointStates.header.stamp.nanosec = (timeSec - sec) * 1e9;
         
-        jointStates.name = {"pitch_joint_1","pitch_joint_2", "pitch_joint_3", "roll_joint_1", "roll_joint_2", "shift_joint", "yaw_joint_1"};
+        jointStates.name = {"shift_joint", "yaw_joint_1", "pitch_joint_1", "pitch_joint_2", "roll_joint_1", "pitch_joint_3", "roll_joint_2"};
         jointStates.position = mJointStates;
 
         joint_states_publisher->publish(jointStates);
 
-//        RCLCPP_INFO(this->get_logger(), "Publish joint states"); /*Publish feedback*/
-//        qDebug() << "joint states:" << mJointStates;
+        RCLCPP_INFO(this->get_logger(), "Publish joint states"); /*Publish feedback*/
         rate.sleep();
     }
 }

@@ -29,6 +29,7 @@ private:
     std::shared_ptr<SerialPort> serial_port;
     // 假装真正的关节状态
     std::vector<double> mJointStates;
+    rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_states_subscriber;
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_states_publisher;
     joint_states goalJointStates;
     uint8_t goalJointStateHeader = 0xA8;
