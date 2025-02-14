@@ -101,6 +101,7 @@ void side_sign_detector::select_contours() {
             continue;
         }
         selected_contours = contour;
+        cv::drawContours(source_image, contours, -1, cv::Scalar(0, 255, 0), 2);
         found = true;
         break;
     }
