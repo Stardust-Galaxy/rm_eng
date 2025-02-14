@@ -9,7 +9,7 @@ GoalJointStatePublisher::GoalJointStatePublisher(const rclcpp::NodeOptions& opti
     double yaw = M_PI;
     double roll = 0 * M_PI;
     msg.pose.position.x = 0.25 - (0.33 + 0.044) * cos(yaw);
-    msg.pose.position.x = 0.3 ;
+    msg.pose.position.x = 0.3;
     msg.pose.position.y = 0.8 - (0.33 + 0.044) * sin(yaw);
     msg.pose.position.y = 0.4;
     msg.pose.position.z = 0.50;
