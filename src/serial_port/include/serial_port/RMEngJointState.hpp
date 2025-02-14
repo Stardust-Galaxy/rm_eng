@@ -4,13 +4,13 @@
 #include <string>
 struct __attribute__ ((packed)) joint_states_for_send {
     uint8_t header;
-    uint8_t mode = 0;
     int16_t yaw_joint_1;
     int16_t pitch_joint_1;
     int16_t pitch_joint_2;
     int16_t roll_joint_1;
     int16_t pitch_joint_3;
     int16_t roll_joint_2;
+    uint8_t tail;
 };
 
 struct  joint_states_ {

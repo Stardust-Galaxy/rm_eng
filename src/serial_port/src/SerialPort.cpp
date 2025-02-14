@@ -6,6 +6,22 @@ std::mutex SerialPort::mtx;
 
 SerialPort::SerialPort(const rclcpp::NodeOptions& options ) : Node("serial_port",options), port_name("/dev/ttyACM0"), baud_rate(115200) {
     joint_state_publisher = this->create_publisher<JointStateMsg>("joint_states",10);
+    goal_joint_state_subscription = this->create_subscription<JointStateMsg>("goal_joint_states",10,[this](const JointStateMsg::SharedPtr msg){
+        std::vector<int16_t> data;
+        joint_states_for_send js;
+        js.header = 0xFF;
+        js.pitch_joint_1 = static_cast<int16_t>(msg->position[0] / 2 / M_PI * 65536);
+        js.pitch_joint_2 = static_cast<int16_t>(msg->position[1] / 2 / M_PI * 65536);
+        js.pitch_joint_3 = static_cast<int16_t>(msg->position[2] / 2 / M_PI * 8192);
+        js.roll_joint_1 = static_cast<int16_t>(msg->position[3] / 2 / M_PI * 65536);
+        js.roll_joint_2 = static_cast<int16_t>(msg->position[4] / 2 / M_PI * 8192);
+        js.yaw_joint_1 = static_cast<int16_t>(msg->position[6] / 2 / M_PI * 65536);
+        js.tail = 0xFE;
+        data.resize(7);
+        memcpy(data.data(),&js,sizeof(js));
+        write(data);
+        RCLCPP_INFO(this->get_logger(),"Send joint states to serial port");
+    });
     std::thread([this](){
         this->init();
         this->read();
@@ -102,15 +118,15 @@ void SerialPort::readHeader() {
                 [this](const boost::system::error_code& error, std::size_t bytes_transferred) {
                     if (!error) {
                         if (header_buffer[0] == 0xff) {
-                            RCLCPP_INFO(this->get_logger(), "Read header: 0xFF");
+                            //RCLCPP_INFO(this->get_logger(), "Read header: 0xFF");
                             readPayload();
                         } else {
                             // 丢弃错误的数据帧头
-                            RCLCPP_INFO(this->get_logger(), "Error header: 0x%x", header_buffer[0]);
+                            //RCLCPP_INFO(this->get_logger(), "Error header: 0x%x", header_buffer[0]);
                             readHeader();
                         }
                     } else {
-                        RCLCPP_INFO(this->get_logger(), "Error reading header: %s", error.message().c_str());
+                        //RCLCPP_INFO(this->get_logger(), "Error reading header: %s", error.message().c_str());
                         readHeader();
                     }
                 });
@@ -121,7 +137,7 @@ void SerialPort::readPayload() {
                    [this](const boost::system::error_code& error, std::size_t bytes_transferred) {
                        if (!error) {
                             // 处理数据负载
-                            RCLCPP_INFO(this->get_logger(), "Read payload: ");
+                            //RCLCPP_INFO(this->get_logger(), "Read payload: ");
                             joint_states_ received_joint_states{};
                             memcpy(&received_joint_states, payload_buffer.data(), sizeof(received_joint_states));
                             JointStateMsg joint_state_msg;
@@ -132,16 +148,16 @@ void SerialPort::readPayload() {
                             joint_state_msg.position[0] = static_cast<double>(received_joint_states.yaw_joint_1) / 65536 * 2 * M_PI ;
                             joint_state_msg.position[1] = static_cast<double>(received_joint_states.pitch_joint_1) / 65536 * 2 * M_PI;
                             joint_state_msg.position[2] = - static_cast<double>(received_joint_states.pitch_joint_2) / 65536 * 2 * M_PI;
-                            joint_state_msg.position[3] = static_cast<double>(received_joint_states.roll_joint_1) / 65536 * 2 * M_PI;
-                            joint_state_msg.position[4] = static_cast<double>(received_joint_states.pitch_joint_3) / 8192 * 2 * M_PI;
-                            joint_state_msg.position[5] = static_cast<double>(received_joint_states.roll_joint_2) / 8192 * 2 * M_PI;
+                            joint_state_msg.position[3] =  - static_cast<double>(received_joint_states.roll_joint_1) / 65536 * 2 * M_PI;
+                            joint_state_msg.position[4] = - static_cast<double>(received_joint_states.pitch_joint_3) / 8192 * 2 * M_PI;
+                            joint_state_msg.position[5] = (static_cast<double>(received_joint_states.roll_joint_2 % 8192) / 8192 * 2 * M_PI);
                             joint_state_msg.position[6] = 0.0;
-                            RCLCPP_INFO(this->get_logger(), "yaw_joint_1: %f, pitch_joint_1: %f, pitch_joint_2: %f, roll_joint_1: %f, pitch_joint_3: %f, roll_joint_2: %f", joint_state_msg.position[0], joint_state_msg.position[1], joint_state_msg.position[2], joint_state_msg.position[3], joint_state_msg.position[4], joint_state_msg.position[5]);
+                            //RCLCPP_INFO(this->get_logger(), "yaw_joint_1: %f, pitch_joint_1: %f, pitch_joint_2: %f, roll_joint_1: %f, pitch_joint_3: %f, roll_joint_2: %f", joint_state_msg.position[0], joint_state_msg.position[1], joint_state_msg.position[2], joint_state_msg.position[3], joint_state_msg.position[4], joint_state_msg.position[5]);
                             joint_state_publisher->publish(joint_state_msg);
                            // 继续读取下一个数据帧
                             readHeader();
                         } else {
-                            RCLCPP_INFO(this->get_logger(), "Error reading payload: %s", error.message().c_str());
+                            //RCLCPP_INFO(this->get_logger(), "Error reading payload: %s", error.message().c_str());
                             readHeader();
                        }
                    });
