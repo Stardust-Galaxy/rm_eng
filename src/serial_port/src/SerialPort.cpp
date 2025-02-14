@@ -11,9 +11,9 @@ SerialPort::SerialPort(const rclcpp::NodeOptions& options ) : Node("serial_port"
         joint_states_for_send js;
         js.header = 0xFF;
         js.pitch_joint_1 = static_cast<int16_t>(msg->position[0] / 2 / M_PI * 65536);
-        js.pitch_joint_2 = static_cast<int16_t>(msg->position[1] / 2 / M_PI * 65536);
-        js.pitch_joint_3 = static_cast<int16_t>(msg->position[2] / 2 / M_PI * 8192);
-        js.roll_joint_1 = static_cast<int16_t>(msg->position[3] / 2 / M_PI * 65536);
+        js.pitch_joint_2 = - static_cast<int16_t>(msg->position[1] / 2 / M_PI * 65536);
+        js.pitch_joint_3 = - static_cast<int16_t>(msg->position[2] / 2 / M_PI * 8192);
+        js.roll_joint_1 = - static_cast<int16_t>(msg->position[3] / 2 / M_PI * 65536);
         js.roll_joint_2 = static_cast<int16_t>(msg->position[4] / 2 / M_PI * 8192);
         js.yaw_joint_1 = static_cast<int16_t>(msg->position[6] / 2 / M_PI * 65536);
         js.tail = 0xFE;
