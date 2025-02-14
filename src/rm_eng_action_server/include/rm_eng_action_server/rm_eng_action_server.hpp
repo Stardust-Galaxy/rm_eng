@@ -13,7 +13,7 @@ class rm_eng_action_server : public rclcpp::Node
 public:
     using FollowJointTrajectory = control_msgs::action::FollowJointTrajectory;
     using GoalHandleFJT = rclcpp_action::ServerGoalHandle<FollowJointTrajectory>;
-
+    using JointStateMsg = sensor_msgs::msg::JointState;
 
     rm_eng_action_server(const rclcpp::NodeOptions& options);
 
@@ -29,10 +29,12 @@ private:
     std::shared_ptr<SerialPort> serial_port;
     // 假装真正的关节状态
     std::vector<double> mJointStates;
-    rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_states_subscriber;
-    rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_states_publisher;
+    rclcpp::Subscription<JointStateMsg>::SharedPtr joint_states_subscriber;
+    rclcpp::Publisher<JointStateMsg>::SharedPtr joint_states_publisher;
+    rclcpp::Publisher<JointStateMsg>::SharedPtr goal_joint_states_publisher;
     joint_states_for_send goalJointStates;
-    uint8_t goalJointStateHeader = 0xA8;
+    uint8_t goalJointStateHeader = 0xFF;
+    uint8_t goalJointStateTail = 0xFE;
 };
 
 #endif 

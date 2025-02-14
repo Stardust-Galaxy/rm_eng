@@ -11,11 +11,12 @@ rm_eng_action_server::rm_eng_action_server(const rclcpp::NodeOptions& options) :
                 std::bind(&rm_eng_action_server::handle_accepted, this, std::placeholders::_1));
 
     rclcpp::QoS qos(10);
-    mJointStates = {0.0, 0.0, -1.395, -2.355, 0.0, 1.57, 0.0};
+    mJointStates = {-0.872, -2.355, 1.57, 0.0, 0.0, 0.0, 0.0};
     //joint_states_subscriber = this->create_subscription<sensor_msgs::msg::JointState>("joint_states_for_send", qos, [this](const sensor_msgs::msg::JointState::SharedPtr msg){
     //    mJointStates = msg->position;
     //});
-    //joint_states_publisher = this->create_publisher<sensor_msgs::msg::JointState>("joint_states_for_send",qos);
+    //joint_states_publisher = this->create_publisher<sensor_msgs::msg::JointState>("joint_states",qos);
+    goal_joint_states_publisher = this->create_publisher<sensor_msgs::msg::JointState>("goal_joint_states",qos);
     //std::thread{std::bind(&rm_eng_action_server::publish_joint_states, this)}
     //.detach();
 }
@@ -81,14 +82,20 @@ void rm_eng_action_server::execute_move(const std::shared_ptr<GoalHandleFJT> goa
         feedback->header.frame_id = goal->trajectory.header.frame_id;
         feedback->header.stamp = goal->trajectory.header.stamp;
         feedback->joint_names = goal->trajectory.joint_names;
-//        feedback->actual = goal->trajectory.joint_names;
-//        feedback->desired = ;
-//        feedback->error = "";
+//      feedback->actual = goal->trajectory.joint_names;
+//      feedback->desired = ;
+//      feedback->error = "";
 
         for(int i = 0; i < static_cast<int>(point.positions.size()); i++)
         {
             mJointStates[i] = point.positions.at(i);
         }
+        JointStateMsg msg;
+        msg.header.frame_id = "base_link";
+        msg.header.stamp = this->now();
+        msg.name = {"pitch_joint_1", "pitch_joint_2", "pitch_joint_3", "roll_joint_1", "roll_joint_2", "shift_joint", "yaw_joint_1"};
+        msg.position = mJointStates;
+        goal_joint_states_publisher->publish(msg);
 
         goal_handle->publish_feedback(feedback);
         /*检测任务是否被取消*/
@@ -122,7 +129,7 @@ void rm_eng_action_server::execute(const std::shared_ptr<GoalHandleFJT> goal_han
     auto trjPointsSize = goal->trajectory.points.size();
     auto finalPoint = goal->trajectory.points.at(trjPointsSize - 1);
     goalJointStates.header = goalJointStateHeader;
-    goalJointStates.mode = 0;
+
     goalJointStates.yaw_joint_1 = static_cast<int16_t>(finalPoint.positions[0] / M_PI / 2 * 65536);
     goalJointStates.pitch_joint_1 = static_cast<int16_t>(finalPoint.positions[1] / M_PI / 2 * 65536);
     goalJointStates.pitch_joint_2 = static_cast<int16_t>(finalPoint.positions[2] / M_PI / 2 * 65536);
@@ -135,6 +142,7 @@ void rm_eng_action_server::execute(const std::shared_ptr<GoalHandleFJT> goal_han
         RCLCPP_INFO(this->get_logger(), "joint name: %s", point.c_str());
     }
     serial_port->write(readyToSendJS);
+    RCLCPP_INFO(this->get_logger(), "Send joint states to serial port");
     result->error_code = 0;
     result->error_string = "";
     goal_handle->succeed(result);
@@ -146,17 +154,9 @@ void rm_eng_action_server::handle_accepted(const std::shared_ptr<GoalHandleFJT> 
     std::thread{std::bind(&rm_eng_action_server::execute_move, this, _1), goal_handle}.detach();
 }
 
-std::vector<int16_t> parseJointStates(joint_states_for_send goal_joint_states)
-{
-    std::vector<int16_t> jointStates;
-    jointStates.push_back(goal_joint_states.header);
-    jointStates.push_back(goal_joint_states.mode);
-    jointStates.push_back(goal_joint_states.yaw_joint_1);
-    jointStates.push_back(goal_joint_states.pitch_joint_1);
-    jointStates.push_back(goal_joint_states.pitch_joint_2);
-    jointStates.push_back(goal_joint_states.roll_joint_1);
-    jointStates.push_back(goal_joint_states.pitch_joint_3);
-    jointStates.push_back(goal_joint_states.roll_joint_2);
+std::vector<int16_t> rm_eng_action_server::parseJointStates(joint_states_for_send goal_joint_states) {
+    std::vector<int16_t> jointStates(sizeof(joint_states_for_send) / sizeof(int16_t));
+    memcpy(&jointStates[0], &goal_joint_states, sizeof(joint_states_for_send));
     return jointStates;
 }
 
@@ -175,7 +175,7 @@ void rm_eng_action_server::publish_joint_states()
         jointStates.header.stamp.sec = sec;
         jointStates.header.stamp.nanosec = (timeSec - sec) * 1e9;
         
-        jointStates.name = {"shift_joint", "yaw_joint_1", "pitch_joint_1", "pitch_joint_2", "roll_joint_1", "pitch_joint_3", "roll_joint_2"};
+        jointStates.name = {"pitch_joint_1", "pitch_joint_2", "pitch_joint_3", "roll_joint_1", "roll_joint_2", "yaw_joint_1", "shift_joint"};
         jointStates.position = mJointStates;
 
         joint_states_publisher->publish(jointStates);
