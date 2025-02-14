@@ -8,7 +8,7 @@ controller_manager:
 
 
     #joint_state_broadcaster:
-      #type: joint_state_broadcaster/JointStateBroadcaster
+    #  type: joint_state_broadcaster/JointStateBroadcaster
 
 robotic_arm_controller:
   ros__parameters:

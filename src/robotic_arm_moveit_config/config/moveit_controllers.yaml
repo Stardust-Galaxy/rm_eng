@@ -18,3 +18,5 @@ moveit_simple_controller_manager:
       - roll_joint_1
       - pitch_joint_3
       - roll_joint_2
+    action_ns: follow_joint_trajectory
+    default: true
