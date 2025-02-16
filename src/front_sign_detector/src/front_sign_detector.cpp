@@ -213,7 +213,7 @@ void front_sign_detector::selectContours() {
         }
     }
     if (root == -1) {
-        std::cerr << "No suitable Area Found!" << std::endl;
+        //std::cerr << "No suitable Area Found!" << std::endl;
         return;
     }
     found = true;
@@ -229,7 +229,7 @@ void front_sign_detector::selectContours() {
 void front_sign_detector::getCorners() {
     if (found == false)
         return;
-    std::cout << "Found suitable area" << std::endl;
+    //std::cout << "Found suitable area" << std::endl;
     cv::circle(source_image, center, 10, cv::Scalar(0, 255, 0), -1);
     for (auto& corner : this->corners) {
         std::vector<cv::Point> approxTriangle;
