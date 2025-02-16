@@ -16,6 +16,7 @@ private:
     rclcpp::Subscription<msg_interfaces::msg::SlotState>::SharedPtr suckerGoalSubscriber;
     void visionTargetMsgCallBack(const PoseStamped::SharedPtr msg);
     PoseStamped msg;
+    PoseStamped last_msg;
     rclcpp::TimerBase::SharedPtr timer;
 };
 
