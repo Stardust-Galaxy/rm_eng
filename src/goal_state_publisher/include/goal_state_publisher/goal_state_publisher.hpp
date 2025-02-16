@@ -1,18 +1,19 @@
-#ifndef GOAL_JOINT_STATE_PUBLISHER_HPP_
-#define GOAL_JOINT_STATE_PUBLISHER_HPP_
+#ifndef GOAL_STATE_PUBLISHER_HPP_
+#define GOAL_STATE_PUBLISHER_HPP_
 
 #include <rclcpp/rclcpp.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+#include <msg_interfaces/msg/slot_state.hpp>
 
-class GoalJointStatePublisher : public rclcpp::Node {
+class GoalStatePublisher : public rclcpp::Node {
 public:
     using PoseStamped = geometry_msgs::msg::PoseStamped;
-    GoalJointStatePublisher(const rclcpp::NodeOptions& options);
-    ~GoalJointStatePublisher() override = default;
+    GoalStatePublisher(const rclcpp::NodeOptions& options);
+    ~GoalStatePublisher() override = default;
 private:
     rclcpp::Publisher<PoseStamped>::SharedPtr goalJointStatePublisher;
-    rclcpp::Subscription<PoseStamped>::SharedPtr visionTargetSubscriber;
+    rclcpp::Subscription<msg_interfaces::msg::SlotState>::SharedPtr suckerGoalSubscriber;
     void visionTargetMsgCallBack(const PoseStamped::SharedPtr msg);
     PoseStamped msg;
     rclcpp::TimerBase::SharedPtr timer;

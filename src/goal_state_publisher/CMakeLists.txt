@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(goal_joint_state_publisher)
+project(goal_state_publisher)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -12,6 +12,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(ament_cmake_auto REQUIRED)
+find_package(msg_interfaces REQUIRED)
 find_package(tf2 REQUIRED)
 ament_auto_find_build_dependencies()
 
@@ -35,8 +36,8 @@ INSTALL(
 )
 
 RCLCPP_COMPONENTS_REGISTER_NODE(${PROJECT_NAME}
-  PLUGIN GoalJointStatePublisher
-  EXECUTABLE goal_joint_state_publisher_node
+  PLUGIN GoalStatePublisher
+  EXECUTABLE goal_state_publisher_node
 )
 
 
