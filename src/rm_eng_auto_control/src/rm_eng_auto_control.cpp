@@ -11,6 +11,7 @@ RMEngAutoControl::RMEngAutoControl(const rclcpp::NodeOptions& options) : Node("r
     goal_joint_state_subscriber = this->create_subscription<PoseStamped>("goal_state", qos, std::bind(&RMEngAutoControl::goal_joint_state_callback, this, std::placeholders::_1));
     slot_pose_subscriber = this->create_subscription<msg_interfaces::msg::SlotState>("slot_state", qos, [this](const msg_interfaces::msg::SlotState::SharedPtr msg) {
         if(msg->slot_stabled) {
+            last_pose = msg->pose;
             publish_slot(*msg);
             publish_mine();
         }
@@ -33,6 +34,7 @@ void RMEngAutoControl::publish_slot(const msg_interfaces::msg::SlotState& slot_s
     SlotObstacle slot("base_link");
     geometry_msgs::msg::Pose slot_pose;
     slot_pose.position = slot_state.pose.pose.position;
+
     slot_pose.orientation = slot_state.pose.pose.orientation;
     RCLCPP_INFO(this->get_logger(), "Generating Slot Collision Objects");
     std::vector<moveit_msgs::msg::CollisionObject> slot_objects = slot.generateCollisionObjects(slot_pose);
@@ -53,8 +55,8 @@ void RMEngAutoControl::publish_mine() {
     // define the pose of the Gold Mine
     geometry_msgs::msg::Pose pose;
     pose.orientation.w = 1.0;
-    pose.position.x = 0.144;
-    pose.position.y = 0.0;
+    pose.position.x = 0.0;
+    pose.position.y = -0.144;
     pose.position.z = 0.0;
     // define the dimensions of the Gold Mine
     shape_msgs::msg::SolidPrimitive primitive;

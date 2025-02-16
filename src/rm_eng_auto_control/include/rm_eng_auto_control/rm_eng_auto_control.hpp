@@ -33,6 +33,7 @@ private:
     rclcpp::Rate loop_rate = rclcpp::Rate(10);
     shape_msgs::msg::Mesh assimpToShapeMsgMesh(const aiMesh *mesh);
     shape_msgs::msg::Mesh loadSTLAsShapeMsgMesh(const std::string &file_path);
+    PoseStamped last_pose;
 };
 
 #endif
