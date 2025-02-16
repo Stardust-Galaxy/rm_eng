@@ -44,6 +44,7 @@ private:
 	cv::Point2f computeCentroid(const std::vector<candidateContour>& candidates);
 
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_subscription;
+    rclcpp::Publisher<msg_interfaces::msg::SlotState>::SharedPtr  sucker_goal_publisher;
     rclcpp::Publisher<msg_interfaces::msg::SlotState>::SharedPtr slot_state_publisher;
     geometry_msgs::msg::Pose last_frame_pose;
     int stable_frame_count = 0;

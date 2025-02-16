@@ -36,6 +36,7 @@ front_sign_detector::front_sign_detector(const rclcpp::NodeOptions &options) : N
     lastFrameCorners.emplace_back(cv::Point(-100, -100));
     lastFrameCorners.emplace_back(cv::Point(-100, 100));
     currentFrameCorners = lastFrameCorners;
+    sucker_goal_publisher = this->create_publisher<msg_interfaces::msg::SlotState>("sucker_goal", rclcpp::QoS(10));
     slot_state_publisher = this->create_publisher<msg_interfaces::msg::SlotState>("slot_state", rclcpp::QoS(10));
     {
         last_frame_pose.position.x = 0.0;
@@ -349,10 +350,15 @@ void front_sign_detector::solveAngle() {
                                           cv::Point3f(size / 2, size / 2,-size / 2),
                                           cv::Point3f(-size / 2, size / 2,-size / 2),
                                           cv::Point3f(-size / 2, -size / 2,-size / 2) };
-        std::vector<cv::Point2f> image_points = { this->corners[0].corner,
-                                         this->corners[1].corner,
-                                         this->corners[2].corner,
-                                         this->corners[3].corner };
+    //for computing the position and orientation of the desired sucker goal state
+    std::vector<cv::Point3f> object_points_ = { cv::Point3f(size / 2, -size / 2, size / 2),
+                                          cv::Point3f(size / 2, size / 2, size / 2),
+                                          cv::Point3f(-size / 2, size / 2, size / 2),
+                                          cv::Point3f(-size / 2, -size / 2, size / 2) };
+    std::vector<cv::Point2f> image_points = { this->corners[0].corner,
+                                     this->corners[1].corner,
+                                     this->corners[2].corner,
+                                     this->corners[3].corner };
 
     cv::solvePnP(object_points, image_points, CameraMatrix, DistCoeffs, this->rVec, this->tVec, false, cv::SOLVEPNP_SQPNP);
     cv::Mat rotation_matrix;
@@ -371,6 +377,44 @@ void front_sign_detector::solveAngle() {
     double reference_pitch = reference_euler_angles[0];
     double reference_yaw = reference_euler_angles[1];
     double reference_roll = reference_euler_angles[2];
+
+    cv::Mat rVecSucker, tVecSucker;
+    cv::solvePnP(object_points_, image_points, CameraMatrix, DistCoeffs, rVecSucker, tVecSucker, false, cv::SOLVEPNP_SQPNP);
+    cv::Mat rotation_matrix_;
+    cv::Rodrigues(rVecSucker, rotation_matrix_);
+    cv::Mat T_world_to_camera_ = cv::Mat::eye(4, 4, CV_64F);
+    rotation_matrix_.copyTo(T_world_to_camera_(cv::Rect(0, 0, 3, 3)));
+    tVecSucker.copyTo(T_world_to_camera_(cv::Rect(3, 0, 1, 3)));
+    cv::Mat T_world_to_reference_ = cv::Mat::eye(4, 4, CV_64F);
+    T_world_to_reference_ = T_camera_to_reference.inv() * T_world_to_camera_;
+    cv::Mat world_to_reference_rMat_ = T_world_to_reference_(cv::Rect(0, 0, 3, 3));
+    cv::Mat world_to_reference_tVec_ = T_world_to_reference_(cv::Rect(3, 0, 1, 3));
+    cv::Mat mtxR_, mtxQ_;
+    cv::Vec3d reference_euler_angles_ = cv::RQDecomp3x3(world_to_reference_rMat_, mtxR_, mtxQ_, cv::noArray(),cv::noArray());
+    double reference_x_ = world_to_reference_tVec_.at<double>(0, 0);
+    double reference_y_ = world_to_reference_tVec_.at<double>(1, 0);
+    double reference_z_ = world_to_reference_tVec_.at<double>(2, 0);
+    double reference_pitch_ = reference_euler_angles_[0];
+    double reference_yaw_ = reference_euler_angles_[1];
+    double reference_roll_ = reference_euler_angles_[2];
+
+    msg_interfaces::msg::SlotState sucker_goal;
+    sucker_goal.pose.header.stamp = this->now();
+    sucker_goal.pose.header.frame_id = "base_link";
+    sucker_goal.slot_stabled = true;
+    sucker_goal.pose.pose.position.x = reference_x_ / 1000;
+    sucker_goal.pose.pose.position.y = - reference_y_ / 1000;
+    sucker_goal.pose.pose.position.z = - reference_z_ / 1000;
+    tf2::Quaternion q_;
+    q_.setRPY(-reference_roll_ / 180 * M_PI,  M_PI + reference_pitch_ / 180 * M_PI, M_PI - reference_yaw_ / 180 * M_PI);
+    sucker_goal.pose.pose.orientation.x = q_.x();
+    sucker_goal.pose.pose.orientation.y = q_.y();
+    sucker_goal.pose.pose.orientation.z = q_.z();
+    sucker_goal.pose.pose.orientation.w = q_.w();
+
+    sucker_goal_publisher->publish(sucker_goal);
+
+
     //print euler angle on the screen through imshow
     cv::putText(source_image, "pitch:" + std::to_string(euler_angles[0]), cv::Point(20, 60), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
     cv::putText(source_image, "yaw:" + std::to_string(euler_angles[1]), cv::Point(20, 110), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
