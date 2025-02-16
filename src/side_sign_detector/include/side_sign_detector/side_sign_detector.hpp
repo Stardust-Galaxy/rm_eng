@@ -38,15 +38,19 @@ private:
     cv::Mat source_image;
     cv::Mat processed_image;
     bool detect_color;
-    int redThreshold = 160;
+    int redThreshold = 30;
     int blueThreshold = 80;
-    int minArea = 1000;
+    double minArea = 8000.0;
+    double maxArea = 35000.0;
     std::vector<cv::Point> selected_contours;
     bool found = false;
     bool direction;
     double camera_to_reference_x_offset = 0.0;
     double camera_to_reference_y_offset = 0.0;
     double camera_to_reference_z_offset = 0.0;
+    bool sqpnp_initialized = false;
+    cv::Mat rVec;
+    cv::Mat tVec;
 };
 
 
