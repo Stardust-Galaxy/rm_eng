@@ -20,7 +20,7 @@ public:
     using PoseStamped = geometry_msgs::msg::PoseStamped;
     RMEngAutoControl(const rclcpp::NodeOptions &options);
     ~RMEngAutoControl();
-    void goal_joint_state_callback(const PoseStamped::SharedPtr msg);
+    void goalStateCallback(const PoseStamped::SharedPtr msg);
 private:
     void publish_slot(const msg_interfaces::msg::SlotState& slot_state);
     void publish_mine();

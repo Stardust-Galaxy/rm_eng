@@ -8,7 +8,8 @@ RMEngAutoControl::RMEngAutoControl(const rclcpp::NodeOptions& options) : Node("r
         rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true)
     );
     move_group = std::make_shared<moveit::planning_interface::MoveGroupInterface>(node,"robotic_arm");
-    goal_joint_state_subscriber = this->create_subscription<PoseStamped>("goal_state", qos, std::bind(&RMEngAutoControl::goal_joint_state_callback, this, std::placeholders::_1));
+    goal_joint_state_subscriber = this->create_subscription<PoseStamped>("goal_state", qos, std::bind(
+            &RMEngAutoControl::goalStateCallback, this, std::placeholders::_1));
     slot_pose_subscriber = this->create_subscription<msg_interfaces::msg::SlotState>("slot_state", qos, [this](const msg_interfaces::msg::SlotState::SharedPtr msg) {
         if(msg->slot_stabled) {
             last_pose = msg->pose;
@@ -90,7 +91,7 @@ void RMEngAutoControl::publish_mine() {
     planning_scene_diff_publisher->publish(planning_scene);
 }
 
-void RMEngAutoControl::goal_joint_state_callback(const PoseStamped::SharedPtr msg) {
+void RMEngAutoControl::goalStateCallback(const PoseStamped::SharedPtr msg) {
     geometry_msgs::msg::Pose target_pose;
     target_pose.position = msg->pose.position;
     target_pose.orientation = msg->pose.orientation;
