@@ -15,10 +15,10 @@ rm_eng_action_server::rm_eng_action_server(const rclcpp::NodeOptions& options) :
     //joint_states_subscriber = this->create_subscription<sensor_msgs::msg::JointState>("joint_states_for_send", qos, [this](const sensor_msgs::msg::JointState::SharedPtr msg){
     //    mJointStates = msg->position;
     //});
-    //joint_states_publisher = this->create_publisher<sensor_msgs::msg::JointState>("joint_states",qos);
+    joint_states_publisher = this->create_publisher<sensor_msgs::msg::JointState>("joint_states",qos);
     goal_joint_states_publisher = this->create_publisher<sensor_msgs::msg::JointState>("goal_joint_states",qos);
-    //std::thread{std::bind(&rm_eng_action_server::publish_joint_states, this)}
-    //.detach();
+    std::thread{std::bind(&rm_eng_action_server::publish_joint_states, this)}
+    .detach();
 }
 
 rclcpp_action::GoalResponse rm_eng_action_server::handle_goal(const rclcpp_action::GoalUUID &uuid, std::shared_ptr<const FollowJointTrajectory::Goal> goal)
@@ -72,7 +72,7 @@ void rm_eng_action_server::execute_move(const std::shared_ptr<GoalHandleFJT> goa
             auto time_to_sleep = time2 - time1;
 
             int64_t duration = ((int64_t)time_to_sleep.seconds()) * 1e9 + time_to_sleep.nanoseconds();
-            std::chrono::nanoseconds ns(duration);
+            std::chrono::nanoseconds ns(duration / 100);
 
 
             rclcpp::sleep_for(ns);
@@ -85,6 +85,9 @@ void rm_eng_action_server::execute_move(const std::shared_ptr<GoalHandleFJT> goa
 //      feedback->actual = goal->trajectory.joint_names;
 //      feedback->desired = ;
 //      feedback->error = "";
+
+
+
 
         for(int i = 0; i < static_cast<int>(point.positions.size()); i++)
         {
@@ -179,8 +182,6 @@ void rm_eng_action_server::publish_joint_states()
         jointStates.position = mJointStates;
 
         joint_states_publisher->publish(jointStates);
-
-        RCLCPP_INFO(this->get_logger(), "Publish joint states"); /*Publish feedback*/
         rate.sleep();
     }
 }
