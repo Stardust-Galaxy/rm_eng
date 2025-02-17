@@ -37,9 +37,9 @@ void RMEngAutoControl::publish_slot(const msg_interfaces::msg::SlotState& slot_s
     slot_pose.position = slot_state.pose.pose.position;
 
     slot_pose.orientation = slot_state.pose.pose.orientation;
-    RCLCPP_INFO(this->get_logger(), "Generating Slot Collision Objects");
+    //RCLCPP_INFO(this->get_logger(), "Generating Slot Collision Objects");
     std::vector<moveit_msgs::msg::CollisionObject> slot_objects = slot.generateCollisionObjects(slot_pose);
-    RCLCPP_INFO(this->get_logger(), "Publishing Slot into the world");
+    //RCLCPP_INFO(this->get_logger(), "Publishing Slot into the world");
     planning_scene.world.collision_objects.insert(planning_scene.world.collision_objects.end(), slot_objects.begin(), slot_objects.end());
     planning_scene.is_diff = true;
     planning_scene_diff_publisher->publish(planning_scene);
@@ -72,20 +72,20 @@ void RMEngAutoControl::publish_mine() {
     attached_object.object.operation = attached_object.object.ADD;
     attached_object.touch_links = std::vector<std::string>{"roll_link_2"};
     // publishing Gold Mine to the world reference frame
-    RCLCPP_INFO(this->get_logger(), "Publishing attached object into the world at the location of the sucker");
+    //RCLCPP_INFO(this->get_logger(), "Publishing attached object into the world at the location of the sucker");
     moveit_msgs::msg::PlanningScene planning_scene;
-    planning_scene.world.collision_objects.push_back(attached_object.object);
-    planning_scene.is_diff = true;
-    planning_scene_diff_publisher->publish(planning_scene);
+//    planning_scene.world.collision_objects.push_back(attached_object.object);
+//    planning_scene.is_diff = true;
+//    planning_scene_diff_publisher->publish(planning_scene);
     // removing the Gold Mine from the world reference frame
-    moveit_msgs::msg::CollisionObject remove_object;
-    remove_object.id = "box";
-    remove_object.header.frame_id = "roll_link_2";
-    remove_object.operation = remove_object.REMOVE;
-    RCLCPP_INFO(this->get_logger(), "Removing attached object from the world");
+//    moveit_msgs::msg::CollisionObject remove_object;
+//    remove_object.id = "box";
+//    remove_object.header.frame_id = "roll_link_2";
+//    remove_object.operation = remove_object.REMOVE;
+    //RCLCPP_INFO(this->get_logger(), "Removing attached object from the world");
     // Attach the Gold Mine to the sucker
     planning_scene.world.collision_objects.clear();
-    planning_scene.world.collision_objects.push_back(remove_object);
+//    planning_scene.world.collision_objects.push_back(remove_object);
     planning_scene.robot_state.attached_collision_objects.push_back(attached_object);
     planning_scene.robot_state.is_diff = true;
     planning_scene_diff_publisher->publish(planning_scene);

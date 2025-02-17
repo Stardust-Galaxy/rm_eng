@@ -63,7 +63,7 @@ SlotObstacle::createComponent(const moveit_msgs::msg::CollisionObject &template_
 
 void SlotObstacle::initializeComponent(moveit_msgs::msg::CollisionObject &component, const std::string &id,
                                        const std::vector<double> &dimensions) {
-    std::cout << "Initializing components" << std::endl;
+    //std::cout << "Initializing components" << std::endl;
     component.id = id;
     component.header.frame_id = frame_id_;
     component.primitives.resize(1);
