@@ -15,7 +15,7 @@ def generate_launch_description():
         name='serial_port_node',
         package='serial_port',
         executable='serial_port_node',
-        output='screen',
+        output='both',
     )
     robotic_arm_moveit_config_node = launch.actions.IncludeLaunchDescription(
         launch.launch_description_sources.PythonLaunchDescriptionSource(
@@ -32,7 +32,8 @@ def generate_launch_description():
         name='rm_eng_auto_control_node',
         package='rm_eng_auto_control',
         executable='rm_eng_auto_control_node',
-        output='screen',
+        output='log',
+        arguments=['--ros-args', '--log-level', 'info']
     )
     front_sign_detection_node = Node(
         name='front_sign_detector_node',
@@ -47,7 +48,7 @@ def generate_launch_description():
         output='screen',
     )
     ld.add_action(hik_camera_launch)
-    ld.add_action(serial_port_node)
+    # ld.add_action(serial_port_node)
     ld.add_action(robotic_arm_moveit_config_node)
     ld.add_action(rm_eng_action_server_node)
     ld.add_action(rm_eng_auto_control_node)
