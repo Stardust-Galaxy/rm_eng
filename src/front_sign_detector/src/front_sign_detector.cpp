@@ -38,6 +38,7 @@ front_sign_detector::front_sign_detector(const rclcpp::NodeOptions &options) : N
     currentFrameCorners = lastFrameCorners;
     sucker_goal_publisher = this->create_publisher<msg_interfaces::msg::SlotState>("sucker_goal", rclcpp::QoS(10));
     slot_state_publisher = this->create_publisher<msg_interfaces::msg::SlotState>("slot_state", rclcpp::QoS(10));
+    image_publisher = this->create_publisher<sensor_msgs::msg::Image>("processed_image", rclcpp::QoS(10));
     {
         last_frame_pose.position.x = 0.0;
         last_frame_pose.position.y = 0.0;
@@ -56,6 +57,10 @@ front_sign_detector::front_sign_detector(const rclcpp::NodeOptions &options) : N
 }
 
 void front_sign_detector::imageCallback(const sensor_msgs::msg::Image::SharedPtr &msg) {
+    //calculate time elapse
+//    auto current_time = this->now();
+//    auto time_elapse = (current_time - msg->header.stamp).seconds() * 1000;
+//    RCLCPP_INFO(this->get_logger(), "Time elapse: %f ms", time_elapse);
     auto img = cv_bridge::toCvCopy(msg, "bgr8")->image;
     processImage(img);
     selectContours();
@@ -371,9 +376,9 @@ void front_sign_detector::solveAngle() {
     cv::Mat mtxR, mtxQ;
     cv::Vec3d euler_angles = cv::RQDecomp3x3(rotation_matrix, mtxR, mtxQ, cv::noArray(),cv::noArray());
     cv::Vec3d reference_euler_angles = cv::RQDecomp3x3(world_to_reference_rMat, mtxR, mtxQ, cv::noArray(),cv::noArray());
-    double reference_x = world_to_reference_tVec.at<double>(0, 0);
-    double reference_y = world_to_reference_tVec.at<double>(1, 0);
-    double reference_z = world_to_reference_tVec.at<double>(2, 0);
+    double reference_x = world_to_reference_tVec.at<double>(2, 0);
+    double reference_y = - world_to_reference_tVec.at<double>(0, 0);
+    double reference_z = - world_to_reference_tVec.at<double>(1, 0);
     double reference_pitch = reference_euler_angles[0];
     double reference_yaw = reference_euler_angles[1];
     double reference_roll = reference_euler_angles[2];
@@ -391,28 +396,14 @@ void front_sign_detector::solveAngle() {
     cv::Mat world_to_reference_tVec_ = T_world_to_reference_(cv::Rect(3, 0, 1, 3));
     cv::Mat mtxR_, mtxQ_;
     cv::Vec3d reference_euler_angles_ = cv::RQDecomp3x3(world_to_reference_rMat_, mtxR_, mtxQ_, cv::noArray(),cv::noArray());
-    double reference_x_ = world_to_reference_tVec_.at<double>(0, 0);
-    double reference_y_ = world_to_reference_tVec_.at<double>(1, 0);
-    double reference_z_ = world_to_reference_tVec_.at<double>(2, 0);
+    double reference_x_ = world_to_reference_tVec_.at<double>(2, 0);
+    double reference_y_ =  - world_to_reference_tVec_.at<double>(0, 0);
+    double reference_z_ =  - world_to_reference_tVec_.at<double>(1, 0);
     double reference_pitch_ = reference_euler_angles_[0];
     double reference_yaw_ = reference_euler_angles_[1];
     double reference_roll_ = reference_euler_angles_[2];
 
-    msg_interfaces::msg::SlotState sucker_goal;
-    sucker_goal.pose.header.stamp = this->now();
-    sucker_goal.pose.header.frame_id = "base_link";
-    sucker_goal.slot_stabled = true;
-    sucker_goal.pose.pose.position.x = reference_x_ / 1000;
-    sucker_goal.pose.pose.position.y = - reference_y_ / 1000;
-    sucker_goal.pose.pose.position.z = - reference_z_ / 1000;
-    tf2::Quaternion q_;
-    q_.setRPY(-reference_roll_ / 180 * M_PI,  M_PI + reference_pitch_ / 180 * M_PI, M_PI - reference_yaw_ / 180 * M_PI);
-    sucker_goal.pose.pose.orientation.x = q_.x();
-    sucker_goal.pose.pose.orientation.y = q_.y();
-    sucker_goal.pose.pose.orientation.z = q_.z();
-    sucker_goal.pose.pose.orientation.w = q_.w();
 
-    sucker_goal_publisher->publish(sucker_goal);
 
 
     //print euler angle on the screen through imshow
@@ -429,32 +420,56 @@ void front_sign_detector::solveAngle() {
     cv::putText(source_image, "y:" + std::to_string(this->tVec.at<double>(1, 0)), cv::Point(20, 410), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
     cv::putText(source_image, "z:" + std::to_string(this->tVec.at<double>(2, 0)), cv::Point(20, 460), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
     cv::putText(source_image, "stabilization_state:" + ((stable_frame_count > 20) ? std::string("STABLE") : std::string("UNSTABLE")), cv::Point(20, 710), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
-    cv::imshow("result", source_image);
-    cv::waitKey(1);
-    //wait until the slot stops moving
-    if(true) {
-        stable_frame_count++;
-    } else {
-        stable_frame_count = 0;
-    }
+    //cv::imshow("result", source_image);
+    //cv::waitKey(1);
+
     geometry_msgs::msg::PoseStamped pose_msg;
     pose_msg.header.stamp = this->now();
     pose_msg.header.frame_id = "base_link";
-    pose_msg.pose.position.x = world_to_reference_tVec.at<double>(2, 0) / 1000;
-    pose_msg.pose.position.y = - world_to_reference_tVec.at<double>(0, 0) / 1000;
-    pose_msg.pose.position.z = - world_to_reference_tVec.at<double>(1, 0) / 1000;
+    pose_msg.pose.position.x = reference_x / 1000;
+    pose_msg.pose.position.y = reference_y / 1000;
+    pose_msg.pose.position.z = reference_z / 1000;
     tf2::Quaternion q;
     q.setRPY(-reference_roll / 180 * M_PI, -reference_pitch / 180 * M_PI, -reference_yaw / 180 * M_PI);
     pose_msg.pose.orientation.x = q.x();
     pose_msg.pose.orientation.y = q.y();
     pose_msg.pose.orientation.z = q.z();
     pose_msg.pose.orientation.w = q.w();
+    if(     abs(last_frame_pose.position.x - pose_msg.pose.position.x) < 0.01 &&
+            abs(last_frame_pose.position.y - pose_msg.pose.position.y) < 0.01 &&
+            abs(last_frame_pose.position.z - pose_msg.pose.position.z) < 0.01
+            ) {
+        stable_frame_count += 1;
+    } else {
+        stable_frame_count = 0;
+    }
+    //publisher slot state
     msg_interfaces::msg::SlotState current_slot_state;
     current_slot_state.pose = pose_msg;
-    current_slot_state.slot_stabled = static_cast<int8_t >(stable_frame_count > 20);
+    current_slot_state.slot_stabled = static_cast<int8_t >(stable_frame_count > 50);
     last_frame_pose = pose_msg.pose;
     slot_state_publisher->publish(current_slot_state);
+    //publish sucker goal
+    msg_interfaces::msg::SlotState sucker_goal;
+    sucker_goal.pose.header.stamp = this->now();
+    sucker_goal.pose.header.frame_id = "base_link";
+    sucker_goal.slot_stabled = static_cast<int8_t >(stable_frame_count > 50);
+    sucker_goal.pose.pose.position.x = reference_x_ / 1000;
+    sucker_goal.pose.pose.position.y = - reference_y_ / 1000;
+    sucker_goal.pose.pose.position.z = - reference_z_ / 1000;
+    tf2::Quaternion q_;
+    q_.setRPY(-reference_roll_ / 180 * M_PI,  M_PI + reference_pitch_ / 180 * M_PI, M_PI - reference_yaw_ / 180 * M_PI);
+    sucker_goal.pose.pose.orientation.x = q_.x();
+    sucker_goal.pose.pose.orientation.y = q_.y();
+    sucker_goal.pose.pose.orientation.z = q_.z();
+    sucker_goal.pose.pose.orientation.w = q_.w();
 
+    sucker_goal_publisher->publish(sucker_goal);
+
+
+    //publish the processed source image
+    sensor_msgs::msg::Image::SharedPtr processed_image_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", source_image).toImageMsg();
+    image_publisher->publish(*processed_image_msg);
 }
 
 cv::Point2f front_sign_detector::computeCentroid(const std::vector<candidateContour>& candidates) {

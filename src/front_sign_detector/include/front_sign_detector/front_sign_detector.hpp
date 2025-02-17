@@ -46,6 +46,7 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_subscription;
     rclcpp::Publisher<msg_interfaces::msg::SlotState>::SharedPtr  sucker_goal_publisher;
     rclcpp::Publisher<msg_interfaces::msg::SlotState>::SharedPtr slot_state_publisher;
+    rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_publisher;
     geometry_msgs::msg::Pose last_frame_pose;
     int stable_frame_count = 0;
     cv::Mat CameraMatrix;
@@ -62,8 +63,8 @@ private:
     cv::Mat rVec;
     cv::Mat tVec;
     double camera_to_reference_x_offset = 0.0;
-    double camera_to_reference_y_offset = 600;
-    double camera_to_reference_z_offset = 0.0;
+    double camera_to_reference_y_offset = 600.0;
+    double camera_to_reference_z_offset = 300.0;
 
 
     //Four cornerPoints
