@@ -20,7 +20,7 @@ SerialPort::SerialPort(const rclcpp::NodeOptions& options ) : Node("serial_port"
         data.resize(7);
         memcpy(data.data(),&js,sizeof(js));
         write(data);
-        RCLCPP_INFO(this->get_logger(),"Send joint states to serial port");
+        //RCLCPP_INFO(this->get_logger(),"Send joint states to serial port");
     });
     std::thread([this](){
         this->init();
@@ -97,9 +97,9 @@ void SerialPort::close() {
 
 void SerialPort::write_handler(boost::system::error_code error_code,size_t bytes_transferred) {
     if(error_code) {
-        std::cerr << "Error: " << error_code.message() << std::endl;
+        RCLCPP_ERROR(this->get_logger(),"Error: %s",error_code.message().c_str());
     }
-    std::cout << "Write " << bytes_transferred << " bytes" << std::endl;
+//    std::cout << "Write " << bytes_transferred << " bytes" << std::endl;
 }
 
 void SerialPort::read() {
@@ -118,15 +118,15 @@ void SerialPort::readHeader() {
                 [this](const boost::system::error_code& error, std::size_t bytes_transferred) {
                     if (!error) {
                         if (header_buffer[0] == 0xff) {
-                            //RCLCPP_INFO(this->get_logger(), "Read header: 0xFF");
+//                            RCLCPP_INFO(this->get_logger(), "Read header: 0xFF");
                             readPayload();
                         } else {
                             // 丢弃错误的数据帧头
-                            //RCLCPP_INFO(this->get_logger(), "Error header: 0x%x", header_buffer[0]);
+//                            RCLCPP_INFO(this->get_logger(), "Error header: 0x%x", header_buffer[0]);
                             readHeader();
                         }
                     } else {
-                        //RCLCPP_INFO(this->get_logger(), "Error reading header: %s", error.message().c_str());
+//                        RCLCPP_INFO(this->get_logger(), "Error reading header: %s", error.message().c_str());
                         readHeader();
                     }
                 });
@@ -137,7 +137,7 @@ void SerialPort::readPayload() {
                    [this](const boost::system::error_code& error, std::size_t bytes_transferred) {
                        if (!error) {
                             // 处理数据负载
-                            //RCLCPP_INFO(this->get_logger(), "Read payload: ");
+//                            RCLCPP_INFO(this->get_logger(), "Read payload: ");
                             joint_states_ received_joint_states{};
                             memcpy(&received_joint_states, payload_buffer.data(), sizeof(received_joint_states));
                             JointStateMsg joint_state_msg;
@@ -152,12 +152,12 @@ void SerialPort::readPayload() {
                             joint_state_msg.position[4] = - static_cast<double>(received_joint_states.pitch_joint_3) / 8192 * 2 * M_PI;
                             joint_state_msg.position[5] = (static_cast<double>(received_joint_states.roll_joint_2 % 8192) / 8192 * 2 * M_PI);
                             joint_state_msg.position[6] = 0.0;
-                            //RCLCPP_INFO(this->get_logger(), "yaw_joint_1: %f, pitch_joint_1: %f, pitch_joint_2: %f, roll_joint_1: %f, pitch_joint_3: %f, roll_joint_2: %f", joint_state_msg.position[0], joint_state_msg.position[1], joint_state_msg.position[2], joint_state_msg.position[3], joint_state_msg.position[4], joint_state_msg.position[5]);
+//                            RCLCPP_INFO(this->get_logger(), "yaw_joint_1: %f, pitch_joint_1: %f, pitch_joint_2: %f, roll_joint_1: %f, pitch_joint_3: %f, roll_joint_2: %f", joint_state_msg.position[0], joint_state_msg.position[1], joint_state_msg.position[2], joint_state_msg.position[3], joint_state_msg.position[4], joint_state_msg.position[5]);
                             joint_state_publisher->publish(joint_state_msg);
                            // 继续读取下一个数据帧
                             readHeader();
                         } else {
-                            //RCLCPP_INFO(this->get_logger(), "Error reading payload: %s", error.message().c_str());
+//                            RCLCPP_INFO(this->get_logger(), "Error reading payload: %s", error.message().c_str());
                             readHeader();
                        }
                    });
