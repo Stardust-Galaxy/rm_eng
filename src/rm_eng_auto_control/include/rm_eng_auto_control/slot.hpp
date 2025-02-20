@@ -14,20 +14,19 @@ class SlotObstacle
 {
 public:
     SlotObstacle(const std::string& frame_id);
-
-    // 根据输入位姿生成完整的 Collision Objects
-    std::vector<moveit_msgs::msg::CollisionObject> generateCollisionObjects(const geometry_msgs::msg::Pose& center_pose);
-
+    std::vector<moveit_msgs::msg::CollisionObject> generateSlotCollisionObjects(const geometry_msgs::msg::Pose& center_pose);
+    std::vector<moveit_msgs::msg::CollisionObject> generateMainResourceIslandCollisionObjects(const geometry_msgs::msg::Pose& center_pose);
 private:
     std::string frame_id_;
+
+    //
     moveit_msgs::msg::CollisionObject bottom_, ceiling_, left_wall_, right_wall_, back_wall_;
-
-    // 初始化槽的各部分模板
+    moveit_msgs::msg::CollisionObject main_resource_island_top, main_resource_island_left, main_resource_island_right, main_resource_island_bottom;
+    //initialize the components of the slot
     void initializeComponents();
-
-    // 初始化单个组件
+    // initialize the component with the given id and dimensions
     void initializeComponent(moveit_msgs::msg::CollisionObject& component, const std::string& id, const std::vector<double>& dimensions);
-    // 生成单个组件的 Collision Object
+
     moveit_msgs::msg::CollisionObject createComponent(const moveit_msgs::msg::CollisionObject& template_object,
                                                       const geometry_msgs::msg::Pose& center_pose,
                                                       double offset_x, double offset_y, double offset_z);

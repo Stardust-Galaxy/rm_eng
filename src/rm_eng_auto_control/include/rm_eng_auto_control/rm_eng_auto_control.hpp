@@ -22,8 +22,10 @@ public:
     ~RMEngAutoControl();
     void goalStateCallback(const PoseStamped::SharedPtr msg);
 private:
+    void publish_main_resource_island();
     void publish_slot(const msg_interfaces::msg::SlotState& slot_state);
     void publish_mine();
+    void main_resource_island_action();
     geometry_msgs::msg::Pose last_target_pose;
     bool is_first_goal = true;
     rclcpp::Subscription<msg_interfaces::msg::SlotState>::SharedPtr slot_pose_subscriber;

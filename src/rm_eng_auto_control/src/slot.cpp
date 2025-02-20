@@ -9,7 +9,19 @@ SlotObstacle::SlotObstacle(const std::string &frame_id) : frame_id_(frame_id) {
 }
 
 std::vector<moveit_msgs::msg::CollisionObject>
-SlotObstacle::generateCollisionObjects(const geometry_msgs::msg::Pose &center_pose) {
+SlotObstacle::generateMainResourceIslandCollisionObjects(const geometry_msgs::msg::Pose &center_pose) {
+    std::vector<moveit_msgs::msg::CollisionObject> objects;
+    // 更新每个组件的位姿并添加到结果中
+    objects.push_back(createComponent(main_resource_island_top, center_pose, 0.0, 0.0, 0.130));
+    objects.push_back(createComponent(main_resource_island_left, center_pose, 0.0, -0.119, 0.0));
+    objects.push_back(createComponent(main_resource_island_right, center_pose, 0.0, 0.119, 0.0));
+    objects.push_back(createComponent(main_resource_island_bottom, center_pose, 0.0, 0.0, -0.130));
+    return objects;
+}
+
+
+std::vector<moveit_msgs::msg::CollisionObject>
+SlotObstacle::generateSlotCollisionObjects(const geometry_msgs::msg::Pose &center_pose) {
     std::vector<moveit_msgs::msg::CollisionObject> objects;
     // 更新每个组件的位姿并添加到结果中
     objects.push_back(createComponent(bottom_, center_pose, -0.0, 0.0, -0.132));
@@ -75,18 +87,15 @@ void SlotObstacle::initializeComponent(moveit_msgs::msg::CollisionObject &compon
 }
 
 void SlotObstacle::initializeComponents() {
-    // bottom
+    // slot part
     initializeComponent(bottom_, "slot_bottom", {0.288, 0.288, 0.024});
-
-    // ceiling
     initializeComponent(ceiling_, "slot_ceiling", {0.288, 0.288, 0.024});
-
-    // left wall
     initializeComponent(left_wall_, "slot_left_wall", {0.288, 0.024, 0.240});
-
-    // right wall
     initializeComponent(right_wall_, "slot_right_wall", {0.288, 0.024, 0.240});
-
-    // back wall
     initializeComponent(back_wall_, "slot_back_wall", {0.076, 0.288, 0.240});
+    //main resource island part
+    initializeComponent(main_resource_island_top, "main_resource_island_top", {0.800, 0.218, 0.02});
+    initializeComponent(main_resource_island_left, "main_resource_island_left", {0.800, 0.020, 0.259});
+    initializeComponent(main_resource_island_right, "main_resource_island_right", {0.800, 0.020, 0.259});
+    initializeComponent(main_resource_island_bottom, "main_resource_island_bottom", {1.200, 0.218, 0.02});
 }
