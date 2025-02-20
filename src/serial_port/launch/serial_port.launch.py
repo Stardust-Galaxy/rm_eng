@@ -11,6 +11,7 @@ def generate_launch_description():
     name='serial_port_node',
     package='serial_port',
     executable='serial_port_node',
+    respawn=True,
     output='screen',
   )
   
