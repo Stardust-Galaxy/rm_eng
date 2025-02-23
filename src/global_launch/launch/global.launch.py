@@ -47,11 +47,11 @@ def generate_launch_description():
         executable='goal_state_publisher_node',
         output='screen',
     )
-    ld.add_action(hik_camera_launch)
+    #ld.add_action(hik_camera_launch)
     # ld.add_action(serial_port_node)
     ld.add_action(robotic_arm_moveit_config_node)
     ld.add_action(rm_eng_action_server_node)
     ld.add_action(rm_eng_auto_control_node)
-    ld.add_action(front_sign_detection_node)
+    # ld.add_action(front_sign_detection_node)
     ld.add_action(goal_state_publisher_node)
     return ld
