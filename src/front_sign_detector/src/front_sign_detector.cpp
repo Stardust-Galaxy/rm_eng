@@ -93,23 +93,19 @@ void front_sign_detector::processImage(const cv::Mat &image) {
         //cv::waitKey(1);
 
         cv::Mat denoised_result;
-        int kernel_size = 5 ;
+        int kernel_size = 3 ;
         cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(kernel_size, kernel_size));
         cv::erode(binary_result, denoised_result, kernel);
         cv::dilate(denoised_result, denoised_result, kernel, cv::Point(-1,-1) ,2);
-
         cv::imshow("denoised result", denoised_result);
         cv::waitKey(1);
-
-        cv::Mat edges_result;
-        cv::Canny(denoised_result, edges_result, 50, 100);
-        processed_image = edges_result;
+        processed_image = denoised_result;
 }
 
 void front_sign_detector::selectContours() {
     found = false; //Reset state
     currentFrameSmallSquares.clear();
-	double minArea = 1000, maxArea = 10000; // For a single contour
+	double minArea = 2000, maxArea = 20000; // For a single contour
 	double maxRatio = 4.5; // For a single contour : width / height
     //double minDis = 0, maxDis = 400; // Compare between contours
     double minAreaRatio = 0.2, maxAreaRatio = 5; // Compare between contours
@@ -120,11 +116,11 @@ void front_sign_detector::selectContours() {
 
 //    for (auto& candidate : contours) {
 //        std::vector<std::vector<cv::Point>> contour = { candidate };
-//        cv::drawContours(source, contour, 0, cv::Scalar(255, 0, 0), 2);
-//        cv::imshow("Polygons", source);
+//        cv::drawContours(source_image, contour, 0, cv::Scalar(255, 0, 0), 2);
+//        cv::imshow("Polygons", source_image);
 //        cv::waitKey(500);
 //    }
-//
+
 	for (const auto& contour : contours) {
 		double area = cv::contourArea(contour);
         std::vector<std::vector<cv::Point>> contour_ = { contour };
@@ -153,10 +149,10 @@ void front_sign_detector::selectContours() {
         double epsilon = 0.02 * cv::arcLength(contour, true);
         cv::approxPolyDP(contour, approx, epsilon, true);
         //cv::polylines(source, approx, true, cv::Scalar(255, 0, 0), 10);
-        if (approx.size() <= 5 || approx.size() >= 13) {
+        if (approx.size() <= 4 || approx.size() >= 13) {
             continue;
         }
-
+        //std::cout << "approx size: " << approx.size() << std::endl;
         //Ratio Judge
 		double widthHeightRatio = static_cast<double>(boundary.size.width) / boundary.size.height;
         double heightWidthRatio = static_cast<double>(boundary.size.height) / boundary.size.width;
@@ -175,7 +171,10 @@ void front_sign_detector::selectContours() {
         lastFrameSmallSquares = currentFrameSmallSquares;
 
     //std::cout << "currentFrameSmallSquares: " << currentFrameSmallSquares.size() << std::endl;
-
+    //draw out the small squares
+    for (const auto& point : currentFrameSmallSquares) {
+        cv::circle(source_image, point, 10, cv::Scalar(0, 0, 255), -1);
+    }
     if (candidateContours.size() < 4) {
         return;
     }
@@ -232,7 +231,7 @@ void front_sign_detector::selectContours() {
 }
 
 void front_sign_detector::getCorners() {
-    if (found == false)
+    if (!found)
         return;
     //std::cout << "Found suitable area" << std::endl;
     cv::circle(source_image, center, 10, cv::Scalar(0, 255, 0), -1);
@@ -346,6 +345,8 @@ void front_sign_detector::solveAngle() {
     camera_to_reference_tVec.at<double>(0,0) = camera_to_reference_x_offset;
     camera_to_reference_tVec.at<double>(1,0) = camera_to_reference_y_offset;
     camera_to_reference_tVec.at<double>(2,0) = camera_to_reference_z_offset;
+    //camera_to_reference's pitch 15 degrees
+    camera_to_reference_rVec.at<double>(0,0) = -15 * M_PI / 180;
     cv::Rodrigues(camera_to_reference_rVec, camera_to_reference_rMat);
     camera_to_reference_rMat.copyTo(T_camera_to_reference(cv::Rect(0, 0, 3, 3)));
     camera_to_reference_tVec.copyTo(T_camera_to_reference(cv::Rect(3, 0, 1, 3)));
@@ -377,7 +378,7 @@ void front_sign_detector::solveAngle() {
     cv::Vec3d euler_angles = cv::RQDecomp3x3(rotation_matrix, mtxR, mtxQ, cv::noArray(),cv::noArray());
     cv::Vec3d reference_euler_angles = cv::RQDecomp3x3(world_to_reference_rMat, mtxR, mtxQ, cv::noArray(),cv::noArray());
     double reference_x = world_to_reference_tVec.at<double>(2, 0);
-    double reference_y = - world_to_reference_tVec.at<double>(0, 0);
+    double reference_y = world_to_reference_tVec.at<double>(0, 0);
     double reference_z = - world_to_reference_tVec.at<double>(1, 0);
     double reference_pitch = reference_euler_angles[0];
     double reference_yaw = reference_euler_angles[1];
@@ -397,7 +398,7 @@ void front_sign_detector::solveAngle() {
     cv::Mat mtxR_, mtxQ_;
     cv::Vec3d reference_euler_angles_ = cv::RQDecomp3x3(world_to_reference_rMat_, mtxR_, mtxQ_, cv::noArray(),cv::noArray());
     double reference_x_ = world_to_reference_tVec_.at<double>(2, 0);
-    double reference_y_ =  - world_to_reference_tVec_.at<double>(0, 0);
+    double reference_y_ = world_to_reference_tVec_.at<double>(0, 0);
     double reference_z_ =  - world_to_reference_tVec_.at<double>(1, 0);
     double reference_pitch_ = reference_euler_angles_[0];
     double reference_yaw_ = reference_euler_angles_[1];
@@ -420,8 +421,8 @@ void front_sign_detector::solveAngle() {
     cv::putText(source_image, "y:" + std::to_string(this->tVec.at<double>(1, 0)), cv::Point(20, 410), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
     cv::putText(source_image, "z:" + std::to_string(this->tVec.at<double>(2, 0)), cv::Point(20, 460), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
     cv::putText(source_image, "stabilization_state:" + ((stable_frame_count > 20) ? std::string("STABLE") : std::string("UNSTABLE")), cv::Point(20, 710), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
-    //cv::imshow("result", source_image);
-    //cv::waitKey(1);
+    cv::imshow("result", source_image);
+    cv::waitKey(1);
 
     geometry_msgs::msg::PoseStamped pose_msg;
     pose_msg.header.stamp = this->now();

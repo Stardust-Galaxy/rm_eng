@@ -63,8 +63,8 @@ private:
     cv::Mat rVec;
     cv::Mat tVec;
     double camera_to_reference_x_offset = 0.0;
-    double camera_to_reference_y_offset = 600.0;
-    double camera_to_reference_z_offset = 300.0;
+    double camera_to_reference_y_offset = 368.0;
+    double camera_to_reference_z_offset = 0.0;
 
 
     //Four cornerPoints
