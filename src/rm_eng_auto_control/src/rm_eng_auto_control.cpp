@@ -26,8 +26,12 @@ RMEngAutoControl::RMEngAutoControl(const rclcpp::NodeOptions& options) : Node("r
 
 
     RCLCPP_INFO(this->get_logger(),"Start to subscribe");
+
+
+
     //publish_mine();
-    publish_main_resource_island();
+
+    //publish_main_resource_island();
     //main_resource_island_action();
 }
 

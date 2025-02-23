@@ -7,7 +7,6 @@
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "control_msgs/action/follow_joint_trajectory.hpp"
 #include "../../serial_port/include/serial_port/RMEngJointState.hpp"
-#include "serial_port/SerialPort.hpp"
 class rm_eng_action_server : public rclcpp::Node
 {
 public:
@@ -26,7 +25,6 @@ private:
     void execute(const std::shared_ptr<GoalHandleFJT> goal_handle);
     void publish_joint_states();
     std::vector<int16_t> parseJointStates(joint_states_for_send goal_joint_states);
-    std::shared_ptr<SerialPort> serial_port;
     // 假装真正的关节状态
     std::vector<double> mJointStates;
     rclcpp::Subscription<JointStateMsg>::SharedPtr joint_states_subscriber;
