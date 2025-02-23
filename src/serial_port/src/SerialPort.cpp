@@ -5,8 +5,8 @@ std::shared_ptr<SerialPort> SerialPort::instance = nullptr;
 std::mutex SerialPort::mtx;
 
 SerialPort::SerialPort(const rclcpp::NodeOptions& options ) : Node("serial_port",options), baud_rate(115200) {
-    joint_state_publisher = this->create_publisher<JointStateMsg>("joint_states",10);
-    goal_joint_state_subscription = this->create_subscription<JointStateMsg>("goal_joint_states",10,[this](const JointStateMsg::SharedPtr msg){
+    joint_state_publisher = this->create_publisher<JointStateMsg>("joint_states",50);
+    goal_joint_state_subscription = this->create_subscription<JointStateMsg>("goal_joint_states",5,[this](const JointStateMsg::SharedPtr msg){
         std::vector<int16_t> data;
         joint_states_for_send js;
         js.header = 0xFF;
@@ -184,7 +184,7 @@ void SerialPort::readPayload() {
                             joint_state_msg.position[4] = - static_cast<double>(received_joint_states.pitch_joint_3) / 8192 * 2 * M_PI;
                             joint_state_msg.position[5] = (static_cast<double>(received_joint_states.roll_joint_2 % 8192) / 8192 * 2 * M_PI);
                             joint_state_msg.position[6] = 0.0;
-                            RCLCPP_INFO(this->get_logger(), "yaw_joint_1: %f, pitch_joint_1: %f, pitch_joint_2: %f, roll_joint_1: %f, pitch_joint_3: %f, roll_joint_2: %f", joint_state_msg.position[0], joint_state_msg.position[1], joint_state_msg.position[2], joint_state_msg.position[3], joint_state_msg.position[4], joint_state_msg.position[5]);
+//                            RCLCPP_INFO(this->get_logger(), "yaw_joint_1: %f, pitch_joint_1: %f, pitch_joint_2: %f, roll_joint_1: %f, pitch_joint_3: %f, roll_joint_2: %f", joint_state_msg.position[0], joint_state_msg.position[1], joint_state_msg.position[2], joint_state_msg.position[3], joint_state_msg.position[4], joint_state_msg.position[5]);
                             joint_state_publisher->publish(joint_state_msg);
                             readHeader();
                         } else {
