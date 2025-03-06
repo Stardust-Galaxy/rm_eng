@@ -20,21 +20,32 @@
 #include <filesystem>
 #include <tf2/LinearMath/Quaternion.h>
 #include <msg_interfaces/msg/slot_state.hpp>
-
+#include <eigen3/Eigen/Dense>
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <message_filters/subscriber.h>
+#include <message_filters/synchronizer.h>
+#include <message_filters/sync_policies/approximate_time.h>
 class side_sign_detector : public rclcpp::Node {
 public:
     side_sign_detector(const rclcpp::NodeOptions& options);
-    void imageCallback(const sensor_msgs::msg::Image::SharedPtr& msg);
-    void processImage(const cv::Mat& image);
+    void synced_callback(const sensor_msgs::msg::Image::SharedPtr& image,
+                         const sensor_msgs::msg::Image::SharedPtr& depth);
+    void processImage(const cv::Mat& image, const cv::Mat& depth);
     void select_contours();
     void solve_angle();
+
 private:
-    rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_subscription;
+    float get_depth(int x, int y);
+    cv::Point3f deproject_pixel_to_point(int u, int v, float depth);
+    message_filters::Subscriber<sensor_msgs::msg::Image> image_subscription;
+    message_filters::Subscriber<sensor_msgs::msg::Image> depth_subscription;
     rclcpp::Publisher<msg_interfaces::msg::SlotState>::SharedPtr slot_state_publisher;
     geometry_msgs::msg::Pose last_frame_pose;
     int stable_frame_count = 0;
     cv::Mat CameraMatrix;
     cv::Mat DistCoeffs;
+    cv::Mat D435i_CameraMatrix;
+    cv::Mat depth_image;
     cv::Mat source_image;
     cv::Mat processed_image;
     bool detect_color;

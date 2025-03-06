@@ -15,6 +15,8 @@
   <depend>rclcpp_components</depend>
   <depend>yaml-cpp</depend>
   <depend>cv_bridge</depend>
+  <depend>Eigen3</depend>
+  <depend>message_filters</depend>
   <depend>geometry_msgs</depend>
   <depend>OpenCV</depend>
   <depend>msg_interfaces</depend>
