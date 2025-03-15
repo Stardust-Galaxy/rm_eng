@@ -27,7 +27,7 @@ RMEngAutoControl::RMEngAutoControl(const rclcpp::NodeOptions& options) : Node("r
 
     RCLCPP_INFO(this->get_logger(),"Start to subscribe");
 
-
+    publish_slot();
 
     //publish_mine();
 
@@ -62,6 +62,28 @@ void RMEngAutoControl::publish_slot(const msg_interfaces::msg::SlotState& slot_s
     //RCLCPP_INFO(this->get_logger(), "Generating Slot Collision Objects");
     std::vector<moveit_msgs::msg::CollisionObject> slot_objects = slot.generateSlotCollisionObjects(slot_pose);
     //RCLCPP_INFO(this->get_logger(), "Publishing Slot into the world");
+    planning_scene.world.collision_objects.insert(planning_scene.world.collision_objects.end(), slot_objects.begin(), slot_objects.end());
+    planning_scene.is_diff = true;
+    planning_scene_diff_publisher->publish(planning_scene);
+}
+
+void RMEngAutoControl::publish_slot() {
+    moveit_msgs::msg::PlanningScene planning_scene;
+    SlotObstacle slot("base_link");
+    geometry_msgs::msg::Pose slot_pose;
+    slot_pose.position.x = 0.53;  // Fixed position
+    slot_pose.position.y = -0.25;  // Fixed position
+    slot_pose.position.z = 0.6;  // Fixed position
+    //left orientation 45 degrees
+    tf2::Quaternion q;
+    q.setRPY(0, 0, -M_PI / 4);
+    slot_pose.orientation.x = q.x();
+    slot_pose.orientation.y = q.y();
+    slot_pose.orientation.z = q.z();
+    slot_pose.orientation.w = q.w();
+
+
+    std::vector<moveit_msgs::msg::CollisionObject> slot_objects = slot.generateSlotCollisionObjects(slot_pose);
     planning_scene.world.collision_objects.insert(planning_scene.world.collision_objects.end(), slot_objects.begin(), slot_objects.end());
     planning_scene.is_diff = true;
     planning_scene_diff_publisher->publish(planning_scene);

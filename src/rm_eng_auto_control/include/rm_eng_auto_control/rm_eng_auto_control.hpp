@@ -36,6 +36,8 @@ private:
     shape_msgs::msg::Mesh assimpToShapeMsgMesh(const aiMesh *mesh);
     shape_msgs::msg::Mesh loadSTLAsShapeMsgMesh(const std::string &file_path);
     PoseStamped last_pose;
+
+    void publish_slot();
 };
 
 #endif

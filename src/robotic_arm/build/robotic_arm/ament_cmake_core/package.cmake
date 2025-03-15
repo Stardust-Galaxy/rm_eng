@@ -1,6 +1,6 @@
 set(_AMENT_PACKAGE_NAME "robotic_arm")
 set(robotic_arm_VERSION "0.0.0")
-set(robotic_arm_MAINTAINER "engineer <2409602366@qq.com>")
+set(robotic_arm_MAINTAINER "stardust <2409602366@qq.com>")
 set(robotic_arm_BUILD_DEPENDS )
 set(robotic_arm_BUILDTOOL_DEPENDS "ament_cmake")
 set(robotic_arm_BUILD_EXPORT_DEPENDS )
