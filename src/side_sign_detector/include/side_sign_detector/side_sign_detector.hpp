@@ -25,6 +25,7 @@
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
+using SyncPolicy = message_filters::sync_policies::ApproximateTime<sensor_msgs::msg::Image, sensor_msgs::msg::Image>;
 class side_sign_detector : public rclcpp::Node {
 public:
     side_sign_detector(const rclcpp::NodeOptions& options);
@@ -40,6 +41,8 @@ private:
     message_filters::Subscriber<sensor_msgs::msg::Image> image_subscription;
     message_filters::Subscriber<sensor_msgs::msg::Image> depth_subscription;
     rclcpp::Publisher<msg_interfaces::msg::SlotState>::SharedPtr slot_state_publisher;
+    rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_publisher;
+    std::shared_ptr<message_filters::Synchronizer<SyncPolicy>> sync;
     geometry_msgs::msg::Pose last_frame_pose;
     int stable_frame_count = 0;
     cv::Mat CameraMatrix;

@@ -2,6 +2,24 @@
 #include <rclcpp_components/register_node_macro.hpp>
 
 front_sign_detector::front_sign_detector(const rclcpp::NodeOptions &options) : Node("front_sign_detector", options) {
+
+    this->declare_parameter("red_threshold", 100);
+    this->declare_parameter("blue_threshold", 80);
+    this->declare_parameter("min_area", 1000.0);
+    this->declare_parameter("max_area", 10000.0);
+    this->declare_parameter("min_small_square_area", 300.0);
+    this->declare_parameter("max_small_square_area", 1000.0);
+    this->declare_parameter("detect_blue_color", false);
+    redThreshold = this->get_parameter("red_threshold").as_int();
+    blueThreshold = this->get_parameter("blue_threshold").as_int();
+    minArea = this->get_parameter("min_area").as_double();
+    maxArea = this->get_parameter("max_area").as_double();
+    minSmallSquareArea = this->get_parameter("min_small_square_area").as_double();
+    maxSmallSquareArea = this->get_parameter("max_small_square_area").as_double();
+    detect_color = this->get_parameter("detect_blue_color").as_bool();
+    params_callback_handle_ = this->add_on_set_parameters_callback(
+            std::bind(&front_sign_detector::parametersCallback, this, std::placeholders::_1));
+
     CameraMatrix = cv::Mat::eye(3, 3, CV_64F);
     DistCoeffs = cv::Mat::zeros(5, 1, CV_64F);
     try {
@@ -23,7 +41,6 @@ front_sign_detector::front_sign_detector(const rclcpp::NodeOptions &options) : N
             index++;
         }
 
-        detect_color = config["detect_blue_color"].as<bool>();
     } catch (const YAML::ParserException& e) {
         std::cerr << "YAML parsing Error: " << e.what() << std::endl;
     } catch (const std::filesystem::filesystem_error& e) {
@@ -49,11 +66,45 @@ front_sign_detector::front_sign_detector(const rclcpp::NodeOptions &options) : N
         last_frame_pose.orientation.w = 1.0;
     }
     image_subscription = this->create_subscription<sensor_msgs::msg::Image>(
-            "/image_raw",
+            "/camera1/image_raw",
             rclcpp::SensorDataQoS(),
             [this](const sensor_msgs::msg::Image::SharedPtr msg) {
                 imageCallback(msg);
             });
+}
+
+rcl_interfaces::msg::SetParametersResult front_sign_detector::parametersCallback(
+        const std::vector<rclcpp::Parameter> &parameters) {
+
+    rcl_interfaces::msg::SetParametersResult result;
+    result.successful = true;
+
+    for (const auto &param : parameters) {
+        if (param.get_name() == "red_threshold") {
+            redThreshold = param.as_int();
+            RCLCPP_INFO(this->get_logger(), "Updated red threshold: %d", redThreshold);
+        } else if (param.get_name() == "blue_threshold") {
+            blueThreshold = param.as_int();
+            RCLCPP_INFO(this->get_logger(), "Updated blue threshold: %d", blueThreshold);
+        } else if(param.get_name() == "min_area") {
+            minArea = param.as_double();
+            RCLCPP_INFO(this->get_logger(), "Updated min area: %f", minArea);
+        } else if(param.get_name() == "max_area") {
+            maxArea = param.as_double();
+            RCLCPP_INFO(this->get_logger(), "Updated max area: %f", maxArea);
+        } else if(param.get_name() == "min_small_square_area") {
+            minSmallSquareArea = param.as_double();
+            RCLCPP_INFO(this->get_logger(), "Updated min small square area: %f", minSmallSquareArea);
+        } else if(param.get_name() == "max_small_square_area") {
+            maxSmallSquareArea = param.as_double();
+            RCLCPP_INFO(this->get_logger(), "Updated max small square area: %f", maxSmallSquareArea);
+        } else if(param.get_name() == "detect_blue_color") {
+            detect_color = param.as_bool();
+            RCLCPP_INFO(this->get_logger(), "Updated detect blue color: %d", detect_color);
+        }
+    }
+
+    return result;
 }
 
 void front_sign_detector::imageCallback(const sensor_msgs::msg::Image::SharedPtr &msg) {
@@ -105,11 +156,9 @@ void front_sign_detector::processImage(const cv::Mat &image) {
 void front_sign_detector::selectContours() {
     found = false; //Reset state
     currentFrameSmallSquares.clear();
-	double minArea = 2000, maxArea = 20000; // For a single contour
 	double maxRatio = 4.5; // For a single contour : width / height
     //double minDis = 0, maxDis = 400; // Compare between contours
     double minAreaRatio = 0.2, maxAreaRatio = 5; // Compare between contours
-    double minSmallSquareArea = 500, maxSmallSquareArea = 2000;
 	std::vector<std::vector<cv::Point>> contours;
 	cv::findContours(processed_image, contours, cv::RETR_EXTERNAL,cv::CHAIN_APPROX_SIMPLE);// should be in counter clock-wise order according to the video
     std::vector<candidateContour> candidateContours; // Potential corner contours
@@ -378,7 +427,7 @@ void front_sign_detector::solveAngle() {
     cv::Vec3d euler_angles = cv::RQDecomp3x3(rotation_matrix, mtxR, mtxQ, cv::noArray(),cv::noArray());
     cv::Vec3d reference_euler_angles = cv::RQDecomp3x3(world_to_reference_rMat, mtxR, mtxQ, cv::noArray(),cv::noArray());
     double reference_x = world_to_reference_tVec.at<double>(2, 0);
-    double reference_y = world_to_reference_tVec.at<double>(0, 0);
+    double reference_y = - world_to_reference_tVec.at<double>(0, 0);
     double reference_z = - world_to_reference_tVec.at<double>(1, 0);
     double reference_pitch = reference_euler_angles[0];
     double reference_yaw = reference_euler_angles[1];
@@ -398,7 +447,7 @@ void front_sign_detector::solveAngle() {
     cv::Mat mtxR_, mtxQ_;
     cv::Vec3d reference_euler_angles_ = cv::RQDecomp3x3(world_to_reference_rMat_, mtxR_, mtxQ_, cv::noArray(),cv::noArray());
     double reference_x_ = world_to_reference_tVec_.at<double>(2, 0);
-    double reference_y_ = world_to_reference_tVec_.at<double>(0, 0);
+    double reference_y_ = - world_to_reference_tVec_.at<double>(0, 0);
     double reference_z_ =  - world_to_reference_tVec_.at<double>(1, 0);
     double reference_pitch_ = reference_euler_angles_[0];
     double reference_yaw_ = reference_euler_angles_[1];
@@ -431,6 +480,7 @@ void front_sign_detector::solveAngle() {
     pose_msg.pose.position.y = reference_y / 1000;
     pose_msg.pose.position.z = reference_z / 1000;
     tf2::Quaternion q;
+//    q.setRPY(-reference_yaw / 180 * M_PI, reference_roll / 180 * M_PI, - reference_pitch / 180 * M_PI);
     q.setRPY(-reference_roll / 180 * M_PI, -reference_pitch / 180 * M_PI, -reference_yaw / 180 * M_PI);
     pose_msg.pose.orientation.x = q.x();
     pose_msg.pose.orientation.y = q.y();
@@ -447,7 +497,7 @@ void front_sign_detector::solveAngle() {
     //publisher slot state
     msg_interfaces::msg::SlotState current_slot_state;
     current_slot_state.pose = pose_msg;
-    current_slot_state.slot_stabled = static_cast<int8_t >(stable_frame_count > 50);
+    current_slot_state.slot_stabled = static_cast<int8_t >(stable_frame_count > 10);
     last_frame_pose = pose_msg.pose;
     slot_state_publisher->publish(current_slot_state);
     //publish sucker goal
@@ -456,10 +506,11 @@ void front_sign_detector::solveAngle() {
     sucker_goal.pose.header.frame_id = "base_link";
     sucker_goal.slot_stabled = static_cast<int8_t >(stable_frame_count > 50);
     sucker_goal.pose.pose.position.x = reference_x_ / 1000;
-    sucker_goal.pose.pose.position.y = - reference_y_ / 1000;
-    sucker_goal.pose.pose.position.z = - reference_z_ / 1000;
+    sucker_goal.pose.pose.position.y = reference_y_ / 1000;
+    sucker_goal.pose.pose.position.z = reference_z_ / 1000;
     tf2::Quaternion q_;
-    q_.setRPY(-reference_roll_ / 180 * M_PI,  M_PI + reference_pitch_ / 180 * M_PI, M_PI - reference_yaw_ / 180 * M_PI);
+    q_.setRPY(-reference_roll_ / 180 * M_PI, -reference_pitch_ / 180 * M_PI, -reference_yaw_ / 180 * M_PI);
+//    q_.setRPY(-reference_roll_ / 180 * M_PI,  M_PI + reference_pitch_ / 180 * M_PI, M_PI - reference_yaw_ / 180 * M_PI);
     sucker_goal.pose.pose.orientation.x = q_.x();
     sucker_goal.pose.pose.orientation.y = q_.y();
     sucker_goal.pose.pose.orientation.z = q_.z();

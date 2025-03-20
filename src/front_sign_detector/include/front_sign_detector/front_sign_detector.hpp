@@ -40,6 +40,8 @@ private:
     void getCorners();
     void solveAngle();
     void show();
+    OnSetParametersCallbackHandle::SharedPtr params_callback_handle_;
+    rcl_interfaces::msg::SetParametersResult parametersCallback(const std::vector<rclcpp::Parameter> &parameters);
     bool compareByRelativeAngle(const candidateContour& a, const candidateContour& b, const cv::Point2f& center);
 	cv::Point2f computeCentroid(const std::vector<candidateContour>& candidates);
 
@@ -54,16 +56,18 @@ private:
     cv::Mat source_image;
     cv::Mat processed_image;
     bool detect_color;
-    int redThreshold = 30;
+    int redThreshold = 120;
     int blueThreshold = 80;
-    double minArea = 8000.0;
-    double maxArea = 35000.0;
+    double minArea = 1000.0;
+    double maxArea = 10000.0;
+    double minSmallSquareArea = 300;
+    double maxSmallSquareArea = 1000;
     std::vector<cv::Point> selected_contours;
     bool found = false;
     cv::Mat rVec;
     cv::Mat tVec;
     double camera_to_reference_x_offset = 0.0;
-    double camera_to_reference_y_offset = 368.0;
+    double camera_to_reference_y_offset = -368.0;
     double camera_to_reference_z_offset = 0.0;
 
 

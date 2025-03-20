@@ -11,14 +11,14 @@ rm_eng_action_server::rm_eng_action_server(const rclcpp::NodeOptions& options) :
                 std::bind(&rm_eng_action_server::handle_accepted, this, std::placeholders::_1));
 
     rclcpp::QoS qos(10);
-    mJointStates = {-0.872, -2.355, 1.57, 0.0, 0.0, 0.0, 0.0};
+    mJointStates = {-0.872, 2.355, -1.57, 0.0, 0.0, 0.0, 0.0};
     //joint_states_subscriber = this->create_subscription<sensor_msgs::msg::JointState>("joint_states_for_send", qos, [this](const sensor_msgs::msg::JointState::SharedPtr msg){
     //    mJointStates = msg->position;
     //});
-//    joint_states_publisher = this->create_publisher<sensor_msgs::msg::JointState>("joint_states",qos);
+    joint_states_publisher = this->create_publisher<sensor_msgs::msg::JointState>("joint_states",qos);
     goal_joint_states_publisher = this->create_publisher<sensor_msgs::msg::JointState>("goal_joint_states",qos);
-//    std::thread{std::bind(&rm_eng_action_server::publish_joint_states, this)}
-//    .detach();
+    std::thread{std::bind(&rm_eng_action_server::publish_joint_states, this)}
+    .detach();
 }
 
 rclcpp_action::GoalResponse rm_eng_action_server::handle_goal(const rclcpp_action::GoalUUID &uuid, std::shared_ptr<const FollowJointTrajectory::Goal> goal)

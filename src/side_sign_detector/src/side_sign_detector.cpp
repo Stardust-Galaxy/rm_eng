@@ -5,7 +5,6 @@
 #include "../include/side_sign_detector/side_sign_detector.hpp"
 
 side_sign_detector::side_sign_detector(const rclcpp::NodeOptions &options) : Node("side_sign_detector", options) {
-    using SyncPolicy = message_filters::sync_policies::ApproximateTime<sensor_msgs::msg::Image, sensor_msgs::msg::Image>;
     CameraMatrix = cv::Mat::eye(3, 3, CV_64F);
     DistCoeffs = cv::Mat::zeros(5, 1, CV_64F);
     D435i_CameraMatrix = cv::Mat::eye(3, 3, CV_64F);
@@ -53,18 +52,21 @@ side_sign_detector::side_sign_detector(const rclcpp::NodeOptions &options) : Nod
         last_frame_pose.orientation.z = 0.0;
         last_frame_pose.orientation.w = 1.0;
     }
-    image_subscription.subscribe(this, "/camera/color/image_raw", rmw_qos_profile_sensor_data);
-    depth_subscription.subscribe(this, "/camera/camera/depth/image_rect_raw", rmw_qos_profile_sensor_data);
-    auto sync = std::make_shared<message_filters::Synchronizer<SyncPolicy>>(SyncPolicy(10), image_subscription, depth_subscription);
+    rclcpp::QoS qos = rclcpp::QoS(rclcpp::KeepLast(100));
+    qos.reliable();
+    qos.transient_local();
+    image_publisher = this->create_publisher<sensor_msgs::msg::Image>("side_sign_processed_image", rclcpp::QoS(10));
+    image_subscription.subscribe(this, "/camera/camera/color/image_raw", qos.get_rmw_qos_profile());
+    depth_subscription.subscribe(this, "/camera/camera/depth/image_rect_raw", qos.get_rmw_qos_profile());
+    sync = std::make_shared<message_filters::Synchronizer<SyncPolicy>>(SyncPolicy(100), image_subscription, depth_subscription);
     sync->registerCallback(&side_sign_detector::synced_callback, this);
+    RCLCPP_INFO(this->get_logger(), "Side Sign Detector Constructed");
 }
 
 void side_sign_detector::synced_callback(const sensor_msgs::msg::Image::SharedPtr &image,
                                          const sensor_msgs::msg::Image::SharedPtr &depth) {
     auto color_image = cv_bridge::toCvCopy(image, "bgr8")->image;
     auto depth_image = cv_bridge::toCvCopy(depth, "32FC1")->image;
-    //cv::imshow("image", color_image);
-    //cv::waitKey(1);
     processImage(color_image, depth_image);
     select_contours();
     solve_angle();
@@ -87,26 +89,28 @@ void side_sign_detector::processImage(const cv::Mat &image, const cv::Mat &depth
         cv::merge(merged_channels, merged_image);
 
         cv::cvtColor(merged_image, gray_image, cv::COLOR_BGR2GRAY);
+        cv::imshow("gray image", gray_image);
+        cv::waitKey(1);
         if(detect_color == RED)
             cv::threshold(gray_image, binary_result, redThreshold, 255, cv::THRESH_BINARY);
         else if(detect_color == BLUE)
             cv::threshold(gray_image, binary_result, blueThreshold, 255, cv::THRESH_BINARY);
 
-        //cv::imshow("binary result", binary_result);
-        //cv::waitKey(1);
-
-        cv::Mat denoised_result;
-        int kernel_size = 5 ;
-        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(kernel_size, kernel_size));
-        cv::erode(binary_result, denoised_result, kernel);
-        cv::dilate(denoised_result, denoised_result, kernel, cv::Point(-1,-1) ,2);
-
-        cv::imshow("denoised result", denoised_result);
+        cv::imshow("binary result", binary_result);
         cv::waitKey(1);
 
-        cv::Mat edges_result;
-        cv::Canny(denoised_result, edges_result, 50, 100);
-        processed_image = edges_result;
+//        cv::Mat denoised_result;
+//        int kernel_size = 5 ;
+//        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(kernel_size, kernel_size));
+//        cv::erode(binary_result, denoised_result, kernel);
+//        cv::dilate(denoised_result, denoised_result, kernel, cv::Point(-1,-1) ,2);
+//
+//        cv::imshow("denoised result", denoised_result);
+//        cv::waitKey(1);
+
+//        cv::Mat edges_result;
+//        cv::Canny(denoised_result, edges_result, 50, 100);
+        processed_image = binary_result;
 
 }
 
@@ -122,7 +126,7 @@ void side_sign_detector::select_contours() {
             continue;
         }
         selected_contours = contour;
-        //cv::drawContours(source_image, contours, -1, cv::Scalar(0, 255, 0), 2);
+        cv::drawContours(source_image, contours, -1, cv::Scalar(0, 255, 0), 2);
         //print the area next to the contour
         //find the origin of the contour
         cv::Point origin = contour[0];
@@ -134,8 +138,8 @@ void side_sign_detector::select_contours() {
         cv::putText(source_image, "area:" + std::to_string(cv::contourArea(contour)), origin, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
         found = true;
     }
-    //cv::imshow("result", source_image);
-    //cv::waitKey(1);
+    cv::imshow("result", source_image);
+    cv::waitKey(1);
 }
 
 void side_sign_detector::solve_angle() {
@@ -329,8 +333,11 @@ void side_sign_detector::solve_angle() {
     cv::putText(source_image, "z:" + std::to_string(T_world_to_camera.at<double>(3, 2)), cv::Point(20, 460), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
     cv::putText(source_image, "direction:" + ((direction == LEFT_ORIENTATION) ? std::string("LEFT_ORIENTED") : std::string("RIGHT_ORIENTED")), cv::Point(20, 660), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
     cv::putText(source_image, "stabilization_state:" + ((stable_frame_count > 20) ? std::string("STABLE") : std::string("UNSTABLE")), cv::Point(20, 710), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
-    cv::imshow("result", source_image);
-    cv::waitKey(1);
+
+    sensor_msgs::msg::Image::SharedPtr processed_image_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", source_image).toImageMsg();
+    image_publisher->publish(*processed_image_msg);
+//    cv::imshow("result", source_image);
+//    cv::waitKey(1);
 
     // Stabilization check
     if (abs(reference_x - last_frame_pose.position.x) < 0.5 &&

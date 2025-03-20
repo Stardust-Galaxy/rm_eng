@@ -10,6 +10,12 @@ GoalStatePublisher::GoalStatePublisher(const rclcpp::NodeOptions& options) : Nod
             msg->pose.header.frame_id = "base_link";
             double duration = msg->pose.header.stamp.sec - last_msg.header.stamp.sec;
             if(duration > 10) {
+                RCLCPP_INFO(this->get_logger(), "Goal state: x: %f, y: %f, z: %f", msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z);
+                // euler angles
+                double roll, pitch, yaw;
+                tf2::Quaternion q(msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z, msg->pose.pose.orientation.w);
+                tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
+                RCLCPP_INFO(this->get_logger(), "Roll: %f, Pitch: %f, Yaw: %f", roll / M_PI * 180, pitch / M_PI * 180, yaw / M_PI * 180);
                 goalJointStatePublisher->publish(msg->pose);
                 last_msg = msg->pose;
             }

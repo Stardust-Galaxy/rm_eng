@@ -8,13 +8,13 @@ RMEngAutoControl::RMEngAutoControl(const rclcpp::NodeOptions& options) : Node("r
         rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true)
     );
     move_group = std::make_shared<moveit::planning_interface::MoveGroupInterface>(node,"robotic_arm");
-//    goal_joint_state_subscriber = this->create_subscription<PoseStamped>("goal_state", qos, std::bind(
-//            &RMEngAutoControl::goalStateCallback, this, std::placeholders::_1));
+    goal_joint_state_subscriber = this->create_subscription<PoseStamped>("goal_state", qos, std::bind(
+            &RMEngAutoControl::goalStateCallback, this, std::placeholders::_1));
     slot_pose_subscriber = this->create_subscription<msg_interfaces::msg::SlotState>("slot_state", qos, [this](const msg_interfaces::msg::SlotState::SharedPtr msg) {
         if(msg->slot_stabled) {
             last_pose = msg->pose;
             publish_slot(*msg);
-            publish_mine();
+            //publish_mine();
         }
     });
     planning_scene_diff_publisher =
@@ -71,16 +71,17 @@ void RMEngAutoControl::publish_slot() {
     moveit_msgs::msg::PlanningScene planning_scene;
     SlotObstacle slot("base_link");
     geometry_msgs::msg::Pose slot_pose;
-    slot_pose.position.x = 0.53;  // Fixed position
-    slot_pose.position.y = -0.25;  // Fixed position
+    slot_pose.position.x = 0.43;  // Fixed position
+    slot_pose.position.y = -0.35;  // Fixed position
     slot_pose.position.z = 0.6;  // Fixed position
-    //left orientation 45 degrees
+
     tf2::Quaternion q;
-    q.setRPY(0, 0, -M_PI / 4);
-    slot_pose.orientation.x = q.x();
-    slot_pose.orientation.y = q.y();
-    slot_pose.orientation.z = q.z();
-    slot_pose.orientation.w = q.w();
+    //left orientation 135 degrees
+//    q.setRPY(0, 0, -100 * M_PI / 180);
+    slot_pose.orientation.x = 0.018158;
+    slot_pose.orientation.y = 0.099788;
+    slot_pose.orientation.z = 0.17786;
+    slot_pose.orientation.w = 0.97881;
 
 
     std::vector<moveit_msgs::msg::CollisionObject> slot_objects = slot.generateSlotCollisionObjects(slot_pose);
@@ -142,14 +143,14 @@ void RMEngAutoControl::goalStateCallback(const PoseStamped::SharedPtr msg) {
     target_pose.orientation = msg->pose.orientation;
     last_target_pose = target_pose;
 
-    move_group->setPoseTarget(target_pose, "roll_link_2");
+    move_group->setPoseTarget(target_pose, "mine_link");
     auto const [success,plan] = [this] {
         moveit::planning_interface::MoveGroupInterface::Plan plan;
         auto ok = static_cast<bool>(move_group->plan(plan));
         return std::make_pair(ok, plan);
     }();
     if(success) {
-        move_group->asyncExecute(plan);
+        //move_group->asyncExecute(plan);
         RCLCPP_INFO(this->get_logger(), "Plan Success!Executing...");
     }
     else {

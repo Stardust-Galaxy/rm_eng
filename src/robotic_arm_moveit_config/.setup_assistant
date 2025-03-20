@@ -6,8 +6,8 @@ moveit_setup_assistant_config:
     relative_path: config/robotic_arm.srdf
   package_settings:
     author_name: stardust
-    author_email: stardust122110@outlook.com
-    generated_timestamp: 1735558627
+    author_email: stardust12210@outlook.com
+    generated_timestamp: 1742095182
   control_xacro:
     command:
       - position
