@@ -490,17 +490,17 @@
       </geometry>
     </collision>
   </link>
-  <joint
-    name="mine_joint"
-    type="fixed">
-    <origin
-      xyz="-0.00042801 -0.16205 0.0001955"
-      rpy="-3.1416 0 0" />
-    <parent
-      link="roll_link_2" />
-    <child
-      link="mine_link" />
-    <axis
-      xyz="0 0 0" />
-  </joint>
+    <joint
+      name="mine_joint"
+      type="fixed">
+      <origin
+        xyz="-0.00042801 -0.16205 0.0001955"
+        rpy="-1.5708 0 1.5708" />  <!-- Changed from "-3.1416 0 0" -->
+      <parent
+        link="roll_link_2" />
+      <child
+        link="mine_link" />
+      <axis
+        xyz="0 0 0" />
+    </joint>
 </robot>
