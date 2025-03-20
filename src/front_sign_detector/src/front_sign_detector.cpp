@@ -10,8 +10,14 @@ front_sign_detector::front_sign_detector(const rclcpp::NodeOptions &options) : N
     this->declare_parameter("min_small_square_area", 300.0);
     this->declare_parameter("max_small_square_area", 1000.0);
     this->declare_parameter("detect_blue_color", false);
+    this->declare_parameter("camera_to_reference_roll", 0.0);
+    this->declare_parameter("camera_to_reference_pitch", 0.0);
+    this->declare_parameter("camera_to_reference_yaw", 0.0);
     redThreshold = this->get_parameter("red_threshold").as_int();
     blueThreshold = this->get_parameter("blue_threshold").as_int();
+    camera_to_reference_pitch = this->get_parameter("camera_to_reference_pitch").as_double();
+    camera_to_reference_roll = this->get_parameter("camera_to_reference_roll").as_double();
+    camera_to_reference_yaw = this->get_parameter("camera_to_reference_yaw").as_double();
     minArea = this->get_parameter("min_area").as_double();
     maxArea = this->get_parameter("max_area").as_double();
     minSmallSquareArea = this->get_parameter("min_small_square_area").as_double();
@@ -24,7 +30,7 @@ front_sign_detector::front_sign_detector(const rclcpp::NodeOptions &options) : N
     DistCoeffs = cv::Mat::zeros(5, 1, CV_64F);
     try {
         std::string current_path = std::filesystem::current_path();
-        std::string yaml_file_path = current_path + "/src/side_sign_detector/config/camera.yaml";
+        std::string yaml_file_path = current_path + "/src/front_sign_detector/config/camera.yaml";
         YAML::Node config = YAML::LoadFile(yaml_file_path);
 
         const YAML::Node& camera_matrix_node = config["camera_matrix"]["data"];
@@ -48,6 +54,8 @@ front_sign_detector::front_sign_detector(const rclcpp::NodeOptions &options) : N
     } catch (const std::exception & e) {
         std::cerr << "Error: " << e.what() << std::endl;
     }
+    RCLCPP_INFO(this->get_logger(), "Camera Matrix: %f %f %f %f %f %f %f %f %f", CameraMatrix.at<double>(0), CameraMatrix.at<double>(1), CameraMatrix.at<double>(2),
+                CameraMatrix.at<double>(3), CameraMatrix.at<double>(4), CameraMatrix.at<double>(5), CameraMatrix.at<double>(6), CameraMatrix.at<double>(7), CameraMatrix.at<double>(8));
     lastFrameCorners.push_back(cv::Point(100, 100));
     lastFrameCorners.emplace_back(cv::Point(100, -100));
     lastFrameCorners.emplace_back(cv::Point(-100, -100));
@@ -101,6 +109,18 @@ rcl_interfaces::msg::SetParametersResult front_sign_detector::parametersCallback
         } else if(param.get_name() == "detect_blue_color") {
             detect_color = param.as_bool();
             RCLCPP_INFO(this->get_logger(), "Updated detect blue color: %d", detect_color);
+        } else if(param.get_name() == "camera_to_reference_roll") {
+            camera_to_reference_roll = param.as_double();
+            RCLCPP_INFO(this->get_logger(), "Updated camera to reference roll: %f", camera_to_reference_roll);
+        } else if(param.get_name() == "camera_to_reference_pitch") {
+            camera_to_reference_pitch = param.as_double();
+            RCLCPP_INFO(this->get_logger(), "Updated camera to reference pitch: %f", camera_to_reference_pitch);
+        } else if(param.get_name() == "camera_to_reference_yaw") {
+            camera_to_reference_yaw = param.as_double();
+            RCLCPP_INFO(this->get_logger(), "Updated camera to reference yaw: %f", camera_to_reference_yaw);
+        } else {
+            result.successful = false;
+            result.reason = "Parameter name not recognized";
         }
     }
 
@@ -394,8 +414,9 @@ void front_sign_detector::solveAngle() {
     camera_to_reference_tVec.at<double>(0,0) = camera_to_reference_x_offset;
     camera_to_reference_tVec.at<double>(1,0) = camera_to_reference_y_offset;
     camera_to_reference_tVec.at<double>(2,0) = camera_to_reference_z_offset;
-    //camera_to_reference's pitch 15 degrees
-    camera_to_reference_rVec.at<double>(0,0) = -15 * M_PI / 180;
+    camera_to_reference_rVec.at<double>(0,0) = camera_to_reference_pitch;
+    camera_to_reference_rVec.at<double>(1,0) = camera_to_reference_yaw;
+    camera_to_reference_rVec.at<double>(2,0) = camera_to_reference_roll;
     cv::Rodrigues(camera_to_reference_rVec, camera_to_reference_rMat);
     camera_to_reference_rMat.copyTo(T_camera_to_reference(cv::Rect(0, 0, 3, 3)));
     camera_to_reference_tVec.copyTo(T_camera_to_reference(cv::Rect(3, 0, 1, 3)));
@@ -406,10 +427,10 @@ void front_sign_detector::solveAngle() {
                                           cv::Point3f(-size / 2, size / 2,-size / 2),
                                           cv::Point3f(-size / 2, -size / 2,-size / 2) };
     //for computing the position and orientation of the desired sucker goal state
-    std::vector<cv::Point3f> object_points_ = { cv::Point3f(size / 2, -size / 2, size / 2),
-                                          cv::Point3f(size / 2, size / 2, size / 2),
-                                          cv::Point3f(-size / 2, size / 2, size / 2),
-                                          cv::Point3f(-size / 2, -size / 2, size / 2) };
+    std::vector<cv::Point3f> object_points_ = { cv::Point3f(size / 2, -size / 2, 0),
+                                          cv::Point3f(size / 2, size / 2, 0),
+                                          cv::Point3f(-size / 2, size / 2, 0),
+                                          cv::Point3f(-size / 2, -size / 2, 0) };
     std::vector<cv::Point2f> image_points = { this->corners[0].corner,
                                      this->corners[1].corner,
                                      this->corners[2].corner,
@@ -469,7 +490,10 @@ void front_sign_detector::solveAngle() {
     cv::putText(source_image, "x:" + std::to_string(this->tVec.at<double>(0, 0)), cv::Point(20, 360), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
     cv::putText(source_image, "y:" + std::to_string(this->tVec.at<double>(1, 0)), cv::Point(20, 410), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
     cv::putText(source_image, "z:" + std::to_string(this->tVec.at<double>(2, 0)), cv::Point(20, 460), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
-    cv::putText(source_image, "stabilization_state:" + ((stable_frame_count > 20) ? std::string("STABLE") : std::string("UNSTABLE")), cv::Point(20, 710), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::putText(source_image, "stabilization_state:" + ((stable_frame_count > 20) ? std::string("STABLE") : std::string("UNSTABLE")), cv::Point(20, 800), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::putText(source_image, "mine_reference_pitch" + std::to_string(reference_pitch_), cv::Point(20, 660), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::putText(source_image, "mine_reference_yaw" + std::to_string(reference_yaw_), cv::Point(20, 710), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+    cv::putText(source_image, "mine_reference_roll" + std::to_string(reference_roll_), cv::Point(20, 760), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
     cv::imshow("result", source_image);
     cv::waitKey(1);
 
@@ -481,7 +505,7 @@ void front_sign_detector::solveAngle() {
     pose_msg.pose.position.z = reference_z / 1000;
     tf2::Quaternion q;
 //    q.setRPY(-reference_yaw / 180 * M_PI, reference_roll / 180 * M_PI, - reference_pitch / 180 * M_PI);
-    q.setRPY(-reference_roll / 180 * M_PI, -reference_pitch / 180 * M_PI, -reference_yaw / 180 * M_PI);
+    q.setRPY(reference_roll / 180 * M_PI, -reference_pitch / 180 * M_PI, -reference_yaw / 180 * M_PI);
     pose_msg.pose.orientation.x = q.x();
     pose_msg.pose.orientation.y = q.y();
     pose_msg.pose.orientation.z = q.z();
@@ -509,7 +533,8 @@ void front_sign_detector::solveAngle() {
     sucker_goal.pose.pose.position.y = reference_y_ / 1000;
     sucker_goal.pose.pose.position.z = reference_z_ / 1000;
     tf2::Quaternion q_;
-    q_.setRPY(-reference_roll_ / 180 * M_PI, -reference_pitch_ / 180 * M_PI, -reference_yaw_ / 180 * M_PI);
+    q_.setRPY(reference_roll_ / 180 * M_PI, -reference_pitch_ / 180 * M_PI, - reference_yaw_ / 180 * M_PI);
+//    q_.setRPY(-reference_roll_ / 180 * M_PI, -reference_pitch_ / 180 * M_PI, -reference_yaw_ / 180 * M_PI);
 //    q_.setRPY(-reference_roll_ / 180 * M_PI,  M_PI + reference_pitch_ / 180 * M_PI, M_PI - reference_yaw_ / 180 * M_PI);
     sucker_goal.pose.pose.orientation.x = q_.x();
     sucker_goal.pose.pose.orientation.y = q_.y();

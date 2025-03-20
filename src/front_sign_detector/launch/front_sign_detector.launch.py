@@ -5,6 +5,21 @@ from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 
 def generate_launch_description():
+    camera_to_reference_pitch_arg = DeclareLaunchArgument(
+        'camera_to_reference_pitch',
+        default_value='0.0',
+        description='Camera to reference pitch'
+    )
+    camera_to_reference_yaw_arg = DeclareLaunchArgument(
+        'camera_to_reference_yaw',
+        default_value='0.0',
+        description='Camera to reference yaw'
+    )
+    camera_to_reference_roll_arg = DeclareLaunchArgument(
+        'camera_to_reference_roll',
+        default_value='0.0',
+        description='Camera to reference roll'
+    )
     red_threshold_arg = DeclareLaunchArgument(
         'red_threshold',
         default_value='100',
@@ -59,7 +74,10 @@ def generate_launch_description():
             'max_area': LaunchConfiguration('max_area'),
             'min_small_square_area': LaunchConfiguration('min_small_square_area'),
             'max_small_square_area': LaunchConfiguration('max_small_square_area'),
-            'detect_blue_color': LaunchConfiguration('detect_blue_color')
+            'detect_blue_color': LaunchConfiguration('detect_blue_color'),
+            'camera_to_reference_pitch': LaunchConfiguration('camera_to_reference_pitch'),
+            'camera_to_reference_yaw': LaunchConfiguration('camera_to_reference_yaw'),
+            'camera_to_reference_roll': LaunchConfiguration('camera_to_reference_roll')
         }]
     )
 
@@ -71,5 +89,8 @@ def generate_launch_description():
         min_small_square_area_arg,
         max_small_square_area_arg,
         detect_blue_arg,
+        camera_to_reference_pitch_arg,
+        camera_to_reference_yaw_arg,
+        camera_to_reference_roll_arg,
         front_sign_detector_node
     ])
