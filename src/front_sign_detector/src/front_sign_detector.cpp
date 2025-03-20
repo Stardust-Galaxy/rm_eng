@@ -411,15 +411,29 @@ void front_sign_detector::solveAngle() {
     cv::Mat T_camera_to_reference = cv::Mat::eye(4, 4, CV_64F);
     cv::Mat T_world_to_reference = cv::Mat::eye(4, 4, CV_64F);
     cv::Mat T_world_to_camera = cv::Mat::eye(4, 4, CV_64F);
+    // Set rotation and translation vectors
     camera_to_reference_tVec.at<double>(0,0) = camera_to_reference_x_offset;
     camera_to_reference_tVec.at<double>(1,0) = camera_to_reference_y_offset;
     camera_to_reference_tVec.at<double>(2,0) = camera_to_reference_z_offset;
     camera_to_reference_rVec.at<double>(0,0) = camera_to_reference_pitch;
     camera_to_reference_rVec.at<double>(1,0) = camera_to_reference_yaw;
     camera_to_reference_rVec.at<double>(2,0) = camera_to_reference_roll;
+
+// Create separate matrices for rotation and translation
+    cv::Mat R_matrix = cv::Mat::eye(4, 4, CV_64F);
+    cv::Mat T_matrix = cv::Mat::eye(4, 4, CV_64F);
+
+// Set up translation matrix
+    T_matrix.at<double>(0,3) = camera_to_reference_x_offset;
+    T_matrix.at<double>(1,3) = camera_to_reference_y_offset;
+    T_matrix.at<double>(2,3) = camera_to_reference_z_offset;
+
+// Set up rotation matrix
     cv::Rodrigues(camera_to_reference_rVec, camera_to_reference_rMat);
-    camera_to_reference_rMat.copyTo(T_camera_to_reference(cv::Rect(0, 0, 3, 3)));
-    camera_to_reference_tVec.copyTo(T_camera_to_reference(cv::Rect(3, 0, 1, 3)));
+    camera_to_reference_rMat.copyTo(R_matrix(cv::Rect(0, 0, 3, 3)));
+
+// Combine: rotation after translation
+    T_camera_to_reference = R_matrix * T_matrix;
 
     float size = 288.0;
     std::vector<cv::Point3f> object_points = { cv::Point3f(size / 2, -size / 2,-size / 2),
