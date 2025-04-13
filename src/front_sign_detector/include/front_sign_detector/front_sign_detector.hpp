@@ -66,12 +66,12 @@ private:
     bool found = false;
     cv::Mat rVec;
     cv::Mat tVec;
-    double camera_to_reference_x_offset = 100.0;
-    double camera_to_reference_y_offset = 600.0;
-    double camera_to_reference_z_offset = -200.0;
+    double camera_to_reference_x_offset = 179.54;
+    double camera_to_reference_y_offset = -290.66;
+    double camera_to_reference_z_offset = 68.47;
     double camera_to_reference_roll = 0.0;
-    double camera_to_reference_pitch = 0.0;
-    double camera_to_reference_yaw = 0.0;
+    double camera_to_reference_pitch = 45.0;
+    double camera_to_reference_yaw = -45.0;
 
 
     //Four cornerPoints
