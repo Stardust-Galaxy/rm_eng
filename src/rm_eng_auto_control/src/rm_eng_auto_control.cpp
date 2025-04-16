@@ -144,6 +144,8 @@ void RMEngAutoControl::goalStateCallback(const PoseStamped::SharedPtr msg) {
     last_target_pose = target_pose;
 
     move_group->setPoseTarget(target_pose, "mine_link");
+    move_group->setPlanningPipelineId("ompl");
+    move_group->setPlannerId("RRTstarkConfigDefault");
     auto const [success,plan] = [this] {
         moveit::planning_interface::MoveGroupInterface::Plan plan;
         auto ok = static_cast<bool>(move_group->plan(plan));
