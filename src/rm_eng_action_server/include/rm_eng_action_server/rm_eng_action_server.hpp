@@ -3,7 +3,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
-
+#include <mutex>
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "control_msgs/action/follow_joint_trajectory.hpp"
 #include "../../serial_port/include/serial_port/RMEngJointState.hpp"
@@ -33,6 +33,7 @@ private:
     joint_states_for_send goalJointStates;
     uint8_t goalJointStateHeader = 0xFF;
     uint8_t goalJointStateTail = 0xFE;
+    std::mutex mutex_;
 };
 
 #endif 
