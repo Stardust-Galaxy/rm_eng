@@ -13,7 +13,6 @@ controller_manager:
 robotic_arm_controller:
   ros__parameters:
     joints:
-      - shift_joint
       - yaw_joint_1
       - pitch_joint_1
       - pitch_joint_2

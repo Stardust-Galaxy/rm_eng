@@ -1,0 +1,47 @@
+[0.013s] Invoking command in '/home/engineer/code/robotic_arm/build/robotic_arm': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/engineer/ros2_libs/moveit2_humble/install/moveit_configs_utils:/home/engineer/ros2_libs/moveit2_humble/install/launch_param_builder:/opt/ros/humble /usr/bin/cmake /home/engineer/code/robotic_arm -DCMAKE_INSTALL_PREFIX=/home/engineer/code/robotic_arm/install/robotic_arm
+[0.067s] -- The C compiler identification is GNU 11.4.0
+[0.113s] -- The CXX compiler identification is GNU 11.4.0
+[0.120s] -- Detecting C compiler ABI info
+[0.192s] -- Detecting C compiler ABI info - done
+[0.196s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.197s] -- Detecting C compile features
+[0.197s] -- Detecting C compile features - done
+[0.199s] -- Detecting CXX compiler ABI info
+[0.278s] -- Detecting CXX compiler ABI info - done
+[0.283s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.284s] -- Detecting CXX compile features
+[0.284s] -- Detecting CXX compile features - done
+[0.289s] -- Found ament_cmake: 1.3.11 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.416s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[0.529s] -- Found ament_lint_auto: 0.12.11 (/opt/ros/humble/share/ament_lint_auto/cmake)
+[0.610s] -- Added test 'cppcheck' to perform static code analysis on C / C++ code
+[0.610s] -- Configured cppcheck include dirs: 
+[0.610s] -- Configured cppcheck exclude dirs and/or files: 
+[0.612s] -- Added test 'lint_cmake' to check CMake code style
+[0.617s] -- Added test 'uncrustify' to check C / C++ code style
+[0.617s] -- Configured uncrustify additional arguments: 
+[0.618s] -- Added test 'xmllint' to check XML markup files
+[0.621s] -- Configuring done
+[0.623s] -- Generating done
+[0.624s] -- Build files have been written to: /home/engineer/code/robotic_arm/build/robotic_arm
+[0.627s] Invoked command in '/home/engineer/code/robotic_arm/build/robotic_arm' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/engineer/ros2_libs/moveit2_humble/install/moveit_configs_utils:/home/engineer/ros2_libs/moveit2_humble/install/launch_param_builder:/opt/ros/humble /usr/bin/cmake /home/engineer/code/robotic_arm -DCMAKE_INSTALL_PREFIX=/home/engineer/code/robotic_arm/install/robotic_arm
+[0.629s] Invoking command in '/home/engineer/code/robotic_arm/build/robotic_arm': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/engineer/ros2_libs/moveit2_humble/install/moveit_configs_utils:/home/engineer/ros2_libs/moveit2_humble/install/launch_param_builder:/opt/ros/humble /usr/bin/cmake --build /home/engineer/code/robotic_arm/build/robotic_arm -- -j8 -l8
+[0.672s] Invoked command in '/home/engineer/code/robotic_arm/build/robotic_arm' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/engineer/ros2_libs/moveit2_humble/install/moveit_configs_utils:/home/engineer/ros2_libs/moveit2_humble/install/launch_param_builder:/opt/ros/humble /usr/bin/cmake --build /home/engineer/code/robotic_arm/build/robotic_arm -- -j8 -l8
+[0.683s] Invoking command in '/home/engineer/code/robotic_arm/build/robotic_arm': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/engineer/ros2_libs/moveit2_humble/install/moveit_configs_utils:/home/engineer/ros2_libs/moveit2_humble/install/launch_param_builder:/opt/ros/humble /usr/bin/cmake --install /home/engineer/code/robotic_arm/build/robotic_arm
+[0.692s] -- Install configuration: ""
+[0.692s] -- Installing: /home/engineer/code/robotic_arm/install/robotic_arm/share/ament_index/resource_index/package_run_dependencies/robotic_arm
+[0.692s] -- Installing: /home/engineer/code/robotic_arm/install/robotic_arm/share/ament_index/resource_index/parent_prefix_path/robotic_arm
+[0.692s] -- Installing: /home/engineer/code/robotic_arm/install/robotic_arm/share/robotic_arm/environment/ament_prefix_path.sh
+[0.692s] -- Installing: /home/engineer/code/robotic_arm/install/robotic_arm/share/robotic_arm/environment/ament_prefix_path.dsv
+[0.692s] -- Installing: /home/engineer/code/robotic_arm/install/robotic_arm/share/robotic_arm/environment/path.sh
+[0.692s] -- Installing: /home/engineer/code/robotic_arm/install/robotic_arm/share/robotic_arm/environment/path.dsv
+[0.692s] -- Installing: /home/engineer/code/robotic_arm/install/robotic_arm/share/robotic_arm/local_setup.bash
+[0.692s] -- Installing: /home/engineer/code/robotic_arm/install/robotic_arm/share/robotic_arm/local_setup.sh
+[0.692s] -- Installing: /home/engineer/code/robotic_arm/install/robotic_arm/share/robotic_arm/local_setup.zsh
+[0.692s] -- Installing: /home/engineer/code/robotic_arm/install/robotic_arm/share/robotic_arm/local_setup.dsv
+[0.693s] -- Installing: /home/engineer/code/robotic_arm/install/robotic_arm/share/robotic_arm/package.dsv
+[0.693s] -- Installing: /home/engineer/code/robotic_arm/install/robotic_arm/share/ament_index/resource_index/packages/robotic_arm
+[0.693s] -- Installing: /home/engineer/code/robotic_arm/install/robotic_arm/share/robotic_arm/cmake/robotic_armConfig.cmake
+[0.693s] -- Installing: /home/engineer/code/robotic_arm/install/robotic_arm/share/robotic_arm/cmake/robotic_armConfig-version.cmake
+[0.693s] -- Installing: /home/engineer/code/robotic_arm/install/robotic_arm/share/robotic_arm/package.xml
+[0.694s] Invoked command in '/home/engineer/code/robotic_arm/build/robotic_arm' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/engineer/ros2_libs/moveit2_humble/install/moveit_configs_utils:/home/engineer/ros2_libs/moveit2_humble/install/launch_param_builder:/opt/ros/humble /usr/bin/cmake --install /home/engineer/code/robotic_arm/build/robotic_arm
